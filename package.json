@@ -1,6 +1,6 @@
 {
   "name": "flying-lobster",
-  "version": "1.0.0",
+  "version": "1.5.0",
   "description": "Floating always-on-top Telegram chat window for Clawdbot",
   "main": "main.js",
   "scripts": {
@@ -11,11 +11,11 @@
   },
   "build": {
     "appId": "com.clawdbot.flying-lobster",
-    "productName": "🦞 Flying Lobster",
+    "productName": "Flying Lobster",
     "directories": { "output": "dist" },
     "mac": {
       "target": "dmg",
-      "icon": "icon.png",
+      "icon": "icon.icns",
       "category": "public.app-category.social-networking"
     },
     "win": {
@@ -23,13 +23,20 @@
       "icon": "icon.png"
     },
     "dmg": { "title": "Flying Lobster" },
-    "nsis": { "oneClick": true, "allowToChangeInstallationDirectory": false }
+    "nsis": { "oneClick": true, "allowToChangeInstallationDirectory": false },
+    "files": [
+      "main.js",
+      "preload.js",
+      "icon.png",
+      "icon.icns"
+    ]
   },
   "devDependencies": {
     "electron": "^33.0.0",
     "electron-builder": "^25.1.8"
   },
   "dependencies": {
+    "auto-launch": "^5.0.6",
     "electron-store": "^8.2.0"
   }
 }

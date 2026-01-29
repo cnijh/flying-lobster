@@ -3,3 +3,4 @@ dist/
 *.dmg
 *.exe
 .DS_Store
+icon.iconset/

@@ -9,6 +9,18 @@ const store = new Store({
   }
 });
 
+const AutoLaunch = require('auto-launch');
+
+const autoLauncher = new AutoLaunch({
+  name: 'Flying Lobster',
+  isHidden: true
+});
+
+// Enable auto-launch on first run
+autoLauncher.isEnabled().then((isEnabled) => {
+  if (!isEnabled) autoLauncher.enable();
+});
+
 let win = null;
 let tray = null;
 
