@@ -24,7 +24,12 @@ function getDefaultBounds() {
 }
 
 function createWindow() {
-  const bounds = store.get('windowBounds') || getDefaultBounds();
+  // Always use computed defaults on first launch
+  let bounds = store.get('windowBounds');
+  if (!bounds || !bounds.width) {
+    bounds = getDefaultBounds();
+    store.set('windowBounds', bounds);
+  }
 
   win = new BrowserWindow({
     ...bounds,
