@@ -1,4 +1,4 @@
-const { app, BrowserWindow, globalShortcut, Tray, Menu, nativeImage, screen } = require('electron');
+const { app, BrowserWindow, globalShortcut, Tray, Menu, nativeImage, screen, ipcMain } = require('electron');
 const path = require('path');
 const Store = require('electron-store').default || require('electron-store');
 
@@ -47,7 +47,7 @@ function createWindow() {
     type: process.platform === 'darwin' ? 'panel' : undefined,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: true,
+      contextIsolation: false,
       nodeIntegration: false,
       partition: 'persist:telegram'
     }
@@ -173,6 +173,13 @@ function createTray() {
 app.whenReady().then(() => {
   createWindow();
   createTray();
+
+  // Handle window drag from preload
+  ipcMain.on('window-drag', (event, dx, dy) => {
+    if (!win) return;
+    const [x, y] = win.getPosition();
+    win.setPosition(x + dx, y + dy);
+  });
 
   const shortcut = process.platform === 'darwin' ? 'CommandOrControl+Shift+M' : 'Ctrl+Shift+M';
   globalShortcut.register(shortcut, toggleWindow);
