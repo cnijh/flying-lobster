@@ -11,7 +11,7 @@
   },
   "build": {
     "appId": "com.clawdbot.flying-lobster",
-    "productName": "Flying Lobster",
+    "productName": "🦞 Flying Lobster",
     "directories": { "output": "dist" },
     "mac": {
       "target": "dmg",

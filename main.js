@@ -147,16 +147,23 @@ function resetPosition() {
 }
 
 function createTray() {
-  const icon = nativeImage.createFromDataURL(
-    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAA' +
-    'mElEQVQ4T2NkoBAwUqifAY8B/xkY/v9nYPj/n4Hh338Ghn//GRj+MTAw/GNgYPjHwMDw' +
-    'F8z+z8Dwl4GB4Q8DA8MfBgaG3wwMDL8YGBh+MjAw/GBgYPjOwMDwjYGB4SsDA8MXBgaG' +
-    'zwwMDJ8YGBg+MjAwfGBgYHjPwMDwjoGB4S0DA8MbBgaG1wwMDK8YGBheAukvAQBNjCYR' +
-    'jE8ZzQAAAABJRU5ErkJggg=='
-  );
-
-  tray = new Tray(icon);
-  tray.setToolTip('Flying Lobster');
+  // On macOS, use title string with emoji for tray (shows as text icon)
+  if (process.platform === 'darwin') {
+    // Create a tiny transparent image for tray, then set title to emoji
+    const emptyIcon = nativeImage.createEmpty();
+    tray = new Tray(emptyIcon);
+    tray.setTitle('🦞');
+  } else {
+    const icon = nativeImage.createFromDataURL(
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAA' +
+      'mElEQVQ4T2NkoBAwUqifAY8B/xkY/v9nYPj/n4Hh338Ghn//GRj+MTAw/GNgYPjHwMDw' +
+      'F8z+z8Dwl4GB4Q8DA8MfBgaG3wwMDL8YGBh+MjAw/GBgYPjOwMDwjYGB4SsDA8MXBgaG' +
+      'zwwMDJ8YGBg+MjAwfGBgYHjPwMDwjoGB4S0DA8MbBgaG1wwMDK8YGBheAukvAQBNjCYR' +
+      'jE8ZzQAAAABJRU5ErkJggg=='
+    );
+    tray = new Tray(icon);
+  }
+  tray.setToolTip('🦞 Flying Lobster');
 
   const contextMenu = Menu.buildFromTemplate([
     { label: 'Show/Hide', click: toggleWindow },

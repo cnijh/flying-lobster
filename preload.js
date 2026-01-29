@@ -5,7 +5,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // Inject drag bar
   const dragBar = document.createElement('div');
   dragBar.id = 'fl-drag-bar';
-  dragBar.innerHTML = '<span style="opacity:0.5;font-size:11px;user-select:none;">☰ Flying Lobster</span>';
+  dragBar.innerHTML = '<span style="opacity:0.5;font-size:11px;user-select:none;">🦞 Flying Lobster</span>';
   dragBar.style.cssText = `
     position: fixed;
     top: 0; left: 0; right: 0;
