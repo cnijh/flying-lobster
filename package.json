@@ -1,42 +1,80 @@
 {
   "name": "flying-lobster",
-  "version": "1.5.0",
-  "description": "Floating always-on-top Telegram chat window for Clawdbot",
-  "main": "main.js",
-  "scripts": {
-    "start": "electron .",
-    "build": "electron-builder",
-    "build:mac": "electron-builder --mac",
-    "build:win": "electron-builder --win"
+  "version": "1.9.19",
+  "description": "Always-on-top chat window for OpenClaw gateways 🦞",
+  "author": "Rootlab.ai",
+  "license": "MIT",
+  "keywords": [
+    "openclaw",
+    "moltbot",
+    "clawdbot",
+    "ai-assistant",
+    "ai-agents",
+    "agent-switcher",
+    "always-on-top",
+    "chat",
+    "claude",
+    "llm",
+    "productivity"
+  ],
+  "main": "src/main/index.js",
+  "bin": {
+    "flying-lobster": "./bin/cli.js"
   },
-  "build": {
-    "appId": "com.clawdbot.flying-lobster",
-    "productName": "Flying Lobster",
-    "directories": { "output": "dist" },
-    "mac": {
-      "target": "dmg",
-      "icon": "icon.icns",
-      "category": "public.app-category.social-networking"
-    },
-    "win": {
-      "target": "nsis",
-      "icon": "icon.png"
-    },
-    "dmg": { "title": "Flying Lobster" },
-    "nsis": { "oneClick": true, "allowToChangeInstallationDirectory": false },
-    "files": [
-      "main.js",
-      "preload.js",
-      "icon.png",
-      "icon.icns"
-    ]
+  "scripts": {
+    "dev": "electron .",
+    "start": "electron .",
+    "build": "electron-builder --mac",
+    "build:dir": "electron-builder --mac --dir",
+    "install-app": "node bin/cli.js install"
   },
   "devDependencies": {
     "electron": "^33.0.0",
-    "electron-builder": "^25.1.8"
+    "electron-builder": "^25.0.0"
   },
   "dependencies": {
-    "auto-launch": "^5.0.6",
-    "electron-store": "^8.2.0"
+    "electron-store": "^8.2.0",
+    "uuid": "^13.0.0"
+  },
+  "build": {
+    "appId": "ai.rootlab.flying-lobster",
+    "productName": "Flying Lobster",
+    "files": [
+      "src/**/*",
+      "assets/**/*"
+    ],
+    "mac": {
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.productivity",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        },
+        {
+          "target": "dir",
+          "arch": [
+            "universal"
+          ]
+        }
+      ]
+    },
+    "dmg": {
+      "title": "Flying Lobster",
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    }
   }
 }

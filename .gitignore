@@ -1,6 +1,4 @@
 node_modules/
 dist/
-*.dmg
-*.exe
 .DS_Store
-icon.iconset/
+*.log

@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src *;">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* ── OpenClaw-Inspired CSS Variables ───────────────── */
+    :root {
+      /* Deep space theme with oceanic accents */
+      --bg-primary: #0a0e1a;
+      --bg-secondary: #0f1419;
+      --bg-tertiary: #161d2a;
+      --bg-surface: #1f2937;
+      
+      /* Typography with enhanced contrast */
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-accent: #38bdf8;
+      
+      /* Ocean-inspired accents */
+      --accent: #0ea5e9;
+      --accent-secondary: #06b6d4;
+      --lobster-accent: #ff6b35;
+      
+      /* Subtle borders and glows */
+      --border-color: #1e293b;
+      --border-accent: #334155;
+      --glow-accent: rgba(14, 165, 233, 0.3);
+      
+      /* Status colors */
+      --close-btn: #ef4444;
+      --close-btn-hover: #dc2626;
+      
+      /* Gradients */
+      --gradient-primary: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+      --gradient-accent: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+    }
+
+    :root.light {
+      --bg-primary: #f5f5f7;
+      --bg-secondary: #e8e8ed;
+      --bg-tertiary: #dcdce2;
+      --text-primary: #1d1d1f;
+      --text-secondary: #6e6e73;
+      --border-color: #c7c7cc;
+      --accent: #0071e3;
+      --close-btn: #ff5f57;
+      --close-btn-hover: #ff3b30;
+    }
+
+    body {
+      font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+      font-feature-settings: 'cv11', 'ss01';
+      font-variation-settings: 'wght' 400;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      letter-spacing: -0.01em;
+      line-height: 1.5;
+    }
+
+    /* ── Enhanced Session Titlebar ─────────────────── */
+    .titlebar {
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      background: var(--gradient-primary);
+      border-bottom: 1px solid var(--border-accent);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
+      -webkit-app-region: drag;
+      flex-shrink: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+    .titlebar::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: var(--gradient-accent);
+      opacity: 0.3;
+    }
+    .titlebar .left { display: flex; align-items: center; gap: 8px; }
+    .titlebar .close {
+      -webkit-app-region: no-drag;
+      cursor: pointer;
+      width: 12px; 
+      height: 12px;
+      border-radius: 50%;
+      background: var(--close-btn);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .titlebar .close:hover { 
+      background: var(--close-btn-hover);
+      transform: scale(1.1);
+      box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+    }
+    .titlebar .session-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+    .session-badge {
+      background: var(--gradient-accent);
+      color: white;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      box-shadow: 0 2px 4px rgba(14, 165, 233, 0.3);
+      animation: sessionGlow 3s ease-in-out infinite;
+    }
+    @keyframes sessionGlow {
+      0%, 100% { box-shadow: 0 2px 4px rgba(14, 165, 233, 0.3); }
+      50% { box-shadow: 0 2px 8px rgba(14, 165, 233, 0.5); }
+    }
+
+    /* ── Content area ─────────────────────────────── */
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    webview {
+      flex: 1;
+      background: var(--bg-primary);
+    }
+
+    /* ── Enhanced Loading State ────────────────────── */
+    .loading {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 600;
+      background: var(--bg-primary);
+    }
+    .loading::before {
+      content: '🦞';
+      font-size: 48px;
+      filter: drop-shadow(0 0 16px var(--glow-accent));
+      animation: loadingFloat 2s ease-in-out infinite;
+    }
+    @keyframes loadingFloat {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-8px) scale(1.05); }
+    }
+    .loading.hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="titlebar">
+    <div class="left">
+      <div class="close" onclick="window.electronAPI.closeWindow()"></div>
+    </div>
+    <div class="session-info">
+      <span class="gateway-name">Loading...</span>
+      <span class="session-badge">session</span>
+    </div>
+    <div></div> <!-- spacer -->
+  </div>
+  
+  <div class="content">
+    <div class="loading" id="loading">Loading session...</div>
+    <webview id="webview" style="display: none;"></webview>
+  </div>
+
+  <script>
+    let currentSession = null;
+    let webview = null;
+
+    // Apply theme
+    function applyTheme(theme) {
+      if (theme === 'light') {
+        document.documentElement.classList.add('light');
+      } else {
+        document.documentElement.classList.remove('light');
+      }
+    }
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', () => {
+      webview = document.getElementById('webview');
+      
+      // Get initial theme
+      window.electronAPI.getTheme().then(applyTheme);
+      
+      // Listen for theme changes
+      window.electronAPI.onThemeChanged(applyTheme);
+      
+      // Listen for webview theme toggle requests
+      window.electronAPI.onToggleWebviewTheme((theme) => {
+        console.log('[Session] Toggling webview theme to:', theme);
+        if (webview && webview.src) {
+          // Execute JavaScript in the webview to toggle OpenClaw's theme
+          const themeToggleJS = `
+            (function() {
+              // Try multiple methods to toggle OpenClaw theme
+              console.log('[Session Webview] Attempting to toggle theme to: ${theme}');
+              
+              // Method 1: Look for theme toggle button and click it
+              const themeBtn = document.querySelector('button[data-theme-toggle], .theme-toggle, [aria-label*="theme"], [title*="theme"]');
+              if (themeBtn) {
+                console.log('[Session Webview] Found theme button, clicking it');
+                themeBtn.click();
+                return;
+              }
+              
+              // Method 2: Look for OpenClaw app and try to call theme methods
+              const app = document.querySelector('openclaw-app');
+              if (app) {
+                // Try to access the app's methods
+                if (typeof app.toggleTheme === 'function') {
+                  console.log('[Session Webview] Calling app.toggleTheme()');
+                  app.toggleTheme();
+                  return;
+                }
+                if (typeof app.setTheme === 'function') {
+                  console.log('[Session Webview] Calling app.setTheme()');
+                  app.setTheme('${theme}');
+                  return;
+                }
+              }
+              
+              // Method 3: Try global theme functions
+              if (typeof window.toggleTheme === 'function') {
+                console.log('[Session Webview] Calling window.toggleTheme()');
+                window.toggleTheme();
+                return;
+              }
+              if (typeof window.setTheme === 'function') {
+                console.log('[Session Webview] Calling window.setTheme()');
+                window.setTheme('${theme}');
+                return;
+              }
+              
+              // Method 4: Try localStorage theme setting
+              const currentTheme = localStorage.getItem('theme') || 'auto';
+              const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+              console.log('[Session Webview] Setting localStorage theme:', newTheme);
+              localStorage.setItem('theme', newTheme);
+              
+              // Dispatch storage event to trigger theme change
+              window.dispatchEvent(new StorageEvent('storage', {
+                key: 'theme',
+                newValue: newTheme,
+                oldValue: currentTheme,
+                storageArea: localStorage
+              }));
+              
+              // Method 5: Try CSS class toggle on document or app
+              if ('${theme}' === 'dark') {
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('light');
+                if (app) {
+                  app.classList.add('dark');
+                  app.classList.remove('light');
+                }
+              } else {
+                document.documentElement.classList.add('light');
+                document.documentElement.classList.remove('dark');
+                if (app) {
+                  app.classList.add('light');
+                  app.classList.remove('dark');
+                }
+              }
+              
+              console.log('[Session Webview] Theme toggle completed using fallback methods');
+            })();
+          `;
+          
+          webview.executeJavaScript(themeToggleJS).catch(e => 
+            console.error('[Session] Failed to toggle webview theme:', e)
+          );
+        }
+      });
+      
+      // Listen for session load
+      window.electronAPI.onLoadSession((sessionData) => {
+        loadSession(sessionData);
+      });
+    });
+
+    function loadSession(sessionData) {
+      const { gateway, session } = sessionData;
+      currentSession = sessionData;
+      
+      // Update titlebar
+      document.querySelector('.gateway-name').textContent = gateway.name;
+      document.querySelector('.session-badge').textContent = session.name;
+      
+      // Load webview
+      webview.src = session.url;
+      webview.style.display = 'block';
+      document.getElementById('loading').classList.add('hidden');
+      
+      console.log(`[Session] Loading ${session.name} from ${gateway.name}: ${session.url}`);
+    }
+
+    // Handle webview events
+    document.addEventListener('DOMContentLoaded', () => {
+      const webview = document.getElementById('webview');
+      
+      webview.addEventListener('dom-ready', () => {
+        console.log('[Session] Webview DOM ready');
+      });
+      
+      webview.addEventListener('did-fail-load', (e) => {
+        console.error('[Session] Webview failed to load:', e.errorDescription);
+        document.getElementById('loading').textContent = 'Failed to load session';
+        document.getElementById('loading').classList.remove('hidden');
+      });
+    });
+  </script>
+</body>
+</html>
