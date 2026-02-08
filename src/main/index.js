@@ -3,6 +3,7 @@ const path = require('path');
 const store = require('./store');
 const { randomUUID } = require('crypto');
 const updater = require('./updater');
+const { initTelemetry } = require('./telemetry');
 
 // CSS to inject into OpenClaw webview to create chat-only view
 const OPENCLAW_CSS = `
@@ -826,6 +827,9 @@ app.whenReady().then(() => {
   createWindow();
   createTray();
   registerHotkey();
+  
+  // Initialize anonymous telemetry (first launch only)
+  initTelemetry(); // Fire-and-forget, never blocks startup
   
   // Initialize auto-updater
   updater.registerIpcHandlers();
