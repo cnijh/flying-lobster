@@ -1,9 +1,20 @@
-const { app, BrowserWindow, globalShortcut, Tray, Menu, nativeImage, ipcMain, webContents, nativeTheme, shell } = require('electron');
-const path = require('path');
-const store = require('./store');
-const { randomUUID } = require('crypto');
-const updater = require('./updater');
-const { initTelemetry } = require('./telemetry');
+const {
+  app,
+  BrowserWindow,
+  globalShortcut,
+  Tray,
+  Menu,
+  nativeImage,
+  ipcMain,
+  webContents,
+  nativeTheme,
+  shell,
+} = require("electron");
+const path = require("path");
+const store = require("./store");
+const { randomUUID } = require("crypto");
+const updater = require("./updater");
+const { initTelemetry } = require("./telemetry");
 
 // CSS to inject into OpenClaw webview to create chat-only view
 const OPENCLAW_CSS = `
@@ -81,53 +92,56 @@ let settingsWindow = null;
 let sessionWindows = new Map(); // Map of sessionId -> BrowserWindow
 let tray = null;
 
+// Screen Vision v3 - Per-session state
+const screenVisionState = new Map(); // windowId -> boolean
+
 // ── IPC Handlers ──────────────────────────────────────────────
 
-ipcMain.handle('get-gateways', () => store.get('gateways'));
+ipcMain.handle("get-gateways", () => store.get("gateways"));
 
-ipcMain.handle('add-gateway', (_e, { name, url, token }) => {
-  const gateways = store.get('gateways');
-  const gw = { id: randomUUID(), name, url, token: token || '' };
+ipcMain.handle("add-gateway", (_e, { name, url, token }) => {
+  const gateways = store.get("gateways");
+  const gw = { id: randomUUID(), name, url, token: token || "" };
   gateways.push(gw);
-  store.set('gateways', gateways);
+  store.set("gateways", gateways);
   // If first gateway, auto-activate
-  if (!store.get('activeGateway')) store.set('activeGateway', gw.id);
+  if (!store.get("activeGateway")) store.set("activeGateway", gw.id);
   return gw;
 });
 
-ipcMain.handle('update-gateway', (_e, { id, name, url, token }) => {
-  const gateways = store.get('gateways').map(g =>
-    g.id === id ? { ...g, name, url, token: token || '' } : g
-  );
-  store.set('gateways', gateways);
+ipcMain.handle("update-gateway", (_e, { id, name, url, token }) => {
+  const gateways = store
+    .get("gateways")
+    .map((g) => (g.id === id ? { ...g, name, url, token: token || "" } : g));
+  store.set("gateways", gateways);
   return gateways;
 });
 
-ipcMain.handle('delete-gateway', (_e, id) => {
-  const gateways = store.get('gateways').filter(g => g.id !== id);
-  store.set('gateways', gateways);
-  if (store.get('activeGateway') === id) {
-    store.set('activeGateway', gateways.length ? gateways[0].id : null);
+ipcMain.handle("delete-gateway", (_e, id) => {
+  const gateways = store.get("gateways").filter((g) => g.id !== id);
+  store.set("gateways", gateways);
+  if (store.get("activeGateway") === id) {
+    store.set("activeGateway", gateways.length ? gateways[0].id : null);
   }
   return gateways;
 });
 
-ipcMain.handle('get-active-gateway', () => {
-  const id = store.get('activeGateway');
-  console.log('[Main] get-active-gateway:', id);
+ipcMain.handle("get-active-gateway", () => {
+  const id = store.get("activeGateway");
+  console.log("[Main] get-active-gateway:", id);
   return id;
 });
 
-ipcMain.handle('set-active-gateway', (_e, id) => {
-  console.log('[Main] set-active-gateway:', id);
-  const gateways = store.get('gateways');
-  const gw = gateways.find(g => g.id === id);
-  console.log('[Main] Gateway details:', gw?.name, gw?.url);
-  store.set('activeGateway', id);
+ipcMain.handle("set-active-gateway", (_e, id) => {
+  console.log("[Main] set-active-gateway:", id);
+  const gateways = store.get("gateways");
+  const gw = gateways.find((g) => g.id === id);
+  console.log("[Main] Gateway details:", gw?.name, gw?.url);
+  store.set("activeGateway", id);
   return id;
 });
 
-ipcMain.handle('show-main-window', () => {
+ipcMain.handle("show-main-window", () => {
   // Close settings if open (mutually exclusive)
   if (settingsWindow && !settingsWindow.isDestroyed()) {
     settingsWindow.close();
@@ -138,58 +152,67 @@ ipcMain.handle('show-main-window', () => {
   }
 });
 
-ipcMain.handle('open-external', (_e, url) => {
+ipcMain.handle("open-external", (_e, url) => {
   shell.openExternal(url);
 });
 
-ipcMain.handle('get-settings', () => ({
-  hotkey: store.get('hotkey'),
-  nextAgentHotkey: store.get('nextAgentHotkey'),
-  prevAgentHotkey: store.get('prevAgentHotkey'),
-  toggleThemeHotkey: store.get('toggleThemeHotkey'),
+ipcMain.handle("get-settings", () => ({
+  hotkey: store.get("hotkey"),
+  nextAgentHotkey: store.get("nextAgentHotkey"),
+  prevAgentHotkey: store.get("prevAgentHotkey"),
+  toggleThemeHotkey: store.get("toggleThemeHotkey"),
 }));
 
-ipcMain.handle('update-settings', (_e, settings) => {
+ipcMain.handle("update-settings", (_e, settings) => {
   let needsReregister = false;
-  
-  if (settings.hotkey && settings.hotkey !== store.get('hotkey')) {
-    store.set('hotkey', settings.hotkey);
+
+  if (settings.hotkey && settings.hotkey !== store.get("hotkey")) {
+    store.set("hotkey", settings.hotkey);
     needsReregister = true;
   }
-  if (settings.nextAgentHotkey && settings.nextAgentHotkey !== store.get('nextAgentHotkey')) {
-    store.set('nextAgentHotkey', settings.nextAgentHotkey);
+  if (
+    settings.nextAgentHotkey &&
+    settings.nextAgentHotkey !== store.get("nextAgentHotkey")
+  ) {
+    store.set("nextAgentHotkey", settings.nextAgentHotkey);
     needsReregister = true;
   }
-  if (settings.prevAgentHotkey && settings.prevAgentHotkey !== store.get('prevAgentHotkey')) {
-    store.set('prevAgentHotkey', settings.prevAgentHotkey);
+  if (
+    settings.prevAgentHotkey &&
+    settings.prevAgentHotkey !== store.get("prevAgentHotkey")
+  ) {
+    store.set("prevAgentHotkey", settings.prevAgentHotkey);
     needsReregister = true;
   }
-  if (settings.toggleThemeHotkey && settings.toggleThemeHotkey !== store.get('toggleThemeHotkey')) {
-    store.set('toggleThemeHotkey', settings.toggleThemeHotkey);
+  if (
+    settings.toggleThemeHotkey &&
+    settings.toggleThemeHotkey !== store.get("toggleThemeHotkey")
+  ) {
+    store.set("toggleThemeHotkey", settings.toggleThemeHotkey);
     needsReregister = true;
   }
-  
+
   if (needsReregister) {
     registerHotkey();
   }
-  
+
   return {
-    hotkey: store.get('hotkey'),
-    nextAgentHotkey: store.get('nextAgentHotkey'),
-    prevAgentHotkey: store.get('prevAgentHotkey'),
-    toggleThemeHotkey: store.get('toggleThemeHotkey'),
+    hotkey: store.get("hotkey"),
+    nextAgentHotkey: store.get("nextAgentHotkey"),
+    prevAgentHotkey: store.get("prevAgentHotkey"),
+    toggleThemeHotkey: store.get("toggleThemeHotkey"),
   };
 });
 
-ipcMain.handle('open-settings', (_e, opts) => {
+ipcMain.handle("open-settings", (_e, opts) => {
   openSettings(opts);
 });
 
-ipcMain.handle('ping-gateway', async (_e, url) => {
+ipcMain.handle("ping-gateway", async (_e, url) => {
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 3000);
-    const res = await fetch(url, { signal: ctrl.signal, method: 'HEAD' });
+    const res = await fetch(url, { signal: ctrl.signal, method: "HEAD" });
     clearTimeout(t);
     return res.ok || res.status < 500;
   } catch {
@@ -199,25 +222,37 @@ ipcMain.handle('ping-gateway', async (_e, url) => {
 
 // ── Theme Support ─────────────────────────────────────────────
 
-ipcMain.handle('get-theme', () => {
-  return nativeTheme.shouldUseDarkColors ? 'dark' : 'light';
+ipcMain.handle("get-theme", () => {
+  return nativeTheme.shouldUseDarkColors ? "dark" : "light";
+});
+
+// ── Screen Vision Support ─────────────────────────────────────
+
+ipcMain.handle("toggle-screen-vision", (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  const id = win.id;
+  const current = screenVisionState.get(id) || false;
+  const next = !current;
+  screenVisionState.set(id, next);
+  win.webContents.send("screen-vision-status", next);
+  return next;
 });
 
 // ── Session Management ────────────────────────────────────────
 
 // Extract session name from session key
 function extractSessionName(sessionKey) {
-  if (!sessionKey) return 'main';
-  
+  if (!sessionKey) return "main";
+
   // Handle patterns like "agent:main:main" -> "main"
-  const parts = sessionKey.split(':');
-  if (parts.length >= 3 && parts[0] === 'agent') {
+  const parts = sessionKey.split(":");
+  if (parts.length >= 3 && parts[0] === "agent") {
     return parts[parts.length - 1]; // Return last part
   }
-  
+
   // Handle other patterns, default to last part after ':'
   const lastPart = parts[parts.length - 1];
-  return lastPart || 'session';
+  return lastPart || "session";
 }
 
 // Fetch sessions from a gateway
@@ -225,63 +260,73 @@ async function fetchGatewaySessions(gatewayUrl) {
   try {
     const ctrl = new AbortController();
     const timeout = setTimeout(() => ctrl.abort(), 5000);
-    
+
     const response = await fetch(`${gatewayUrl}/api/sessions`, {
       signal: ctrl.signal,
-      headers: { 'Accept': 'application/json' }
+      headers: { Accept: "application/json" },
     });
-    
+
     clearTimeout(timeout);
-    
+
     if (!response.ok) {
-      console.log(`[Sessions] Gateway ${gatewayUrl} sessions API returned ${response.status}`);
+      console.log(
+        `[Sessions] Gateway ${gatewayUrl} sessions API returned ${response.status}`,
+      );
       return [];
     }
-    
+
     const data = await response.json();
-    
+
     // Expect sessions to be an array of strings (session keys)
     if (!Array.isArray(data)) {
-      console.log(`[Sessions] Gateway ${gatewayUrl} returned non-array:`, typeof data);
+      console.log(
+        `[Sessions] Gateway ${gatewayUrl} returned non-array:`,
+        typeof data,
+      );
       return [];
     }
-    
-    return data.map(sessionKey => ({
+
+    return data.map((sessionKey) => ({
       id: sessionKey,
       name: extractSessionName(sessionKey),
-      url: `${gatewayUrl}/chat?session=${sessionKey}`
+      url: `${gatewayUrl}/chat?session=${sessionKey}`,
     }));
-    
   } catch (error) {
-    console.log(`[Sessions] Failed to fetch sessions from ${gatewayUrl}:`, error.message);
+    console.log(
+      `[Sessions] Failed to fetch sessions from ${gatewayUrl}:`,
+      error.message,
+    );
     return [];
   }
 }
 
 // Update sessions for all gateways
 async function refreshAllSessions() {
-  const gateways = store.get('gateways');
+  const gateways = store.get("gateways");
   const allSessions = {};
-  
+
   for (const gateway of gateways) {
     console.log(`[Sessions] Fetching sessions for gateway ${gateway.name}...`);
     const sessions = await fetchGatewaySessions(gateway.url);
     allSessions[gateway.id] = sessions;
-    console.log(`[Sessions] Found ${sessions.length} sessions for ${gateway.name}:`, sessions.map(s => s.name));
+    console.log(
+      `[Sessions] Found ${sessions.length} sessions for ${gateway.name}:`,
+      sessions.map((s) => s.name),
+    );
   }
-  
-  store.set('sessions', allSessions);
+
+  store.set("sessions", allSessions);
   return allSessions;
 }
 
 // Create a session window
 function createSessionWindow(gatewayId, session) {
-  const gateway = store.get('gateways').find(g => g.id === gatewayId);
+  const gateway = store.get("gateways").find((g) => g.id === gatewayId);
   if (!gateway) {
     console.error(`[Sessions] Gateway ${gatewayId} not found`);
     return null;
   }
-  
+
   // Check if window already exists
   if (sessionWindows.has(session.id)) {
     const existingWindow = sessionWindows.get(session.id);
@@ -293,18 +338,18 @@ function createSessionWindow(gatewayId, session) {
       sessionWindows.delete(session.id);
     }
   }
-  
+
   // Get saved bounds or default offset from main window
-  const savedBounds = store.get('sessionWindowBounds')[session.id];
-  const mainBounds = store.get('windowBounds');
-  
+  const savedBounds = store.get("sessionWindowBounds")[session.id];
+  const mainBounds = store.get("windowBounds");
+
   const bounds = savedBounds || {
     x: (mainBounds.x || 100) + 50,
     y: (mainBounds.y || 100) + 50,
     width: mainBounds.width || 400,
-    height: mainBounds.height || 600
+    height: mainBounds.height || 600,
   };
-  
+
   const sessionWindow = new BrowserWindow({
     width: bounds.width,
     height: bounds.height,
@@ -320,115 +365,183 @@ function createSessionWindow(gatewayId, session) {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload-session.js'),
+      preload: path.join(__dirname, "preload-session.js"),
       webviewTag: true,
-    }
+    },
   });
-  
-  if (process.platform === 'darwin') {
-    sessionWindow.setAlwaysOnTop(true, 'screen-saver');
-    sessionWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+
+  if (process.platform === "darwin") {
+    sessionWindow.setAlwaysOnTop(true, "screen-saver");
+    sessionWindow.setVisibleOnAllWorkspaces(true, {
+      visibleOnFullScreen: true,
+    });
   } else {
-    sessionWindow.setAlwaysOnTop(true, 'screen-saver');
+    sessionWindow.setAlwaysOnTop(true, "screen-saver");
   }
-  
+
   // Load session-specific HTML (we'll create this)
-  sessionWindow.loadFile(path.join(__dirname, '..', 'renderer', 'session.html'));
-  
+  sessionWindow.loadFile(
+    path.join(__dirname, "..", "renderer", "session.html"),
+  );
+
   // Store window reference
   sessionWindows.set(session.id, sessionWindow);
-  
+
   // Track active session windows
-  const activeWindows = store.get('activeSessionWindows');
+  const activeWindows = store.get("activeSessionWindows");
   activeWindows[sessionWindow.id] = { gatewayId, sessionId: session.id };
-  store.set('activeSessionWindows', activeWindows);
-  
+  store.set("activeSessionWindows", activeWindows);
+
   // Inject CSS/JS into webview when attached
-  sessionWindow.webContents.on('did-attach-webview', (event, wvWebContents) => {
+  sessionWindow.webContents.on("did-attach-webview", (event, wvWebContents) => {
     console.log(`[Sessions] Session ${session.name} webview attached`);
-    
-    wvWebContents.on('dom-ready', () => {
-      wvWebContents.insertCSS(OPENCLAW_CSS).catch(e => console.error('Session CSS injection failed:', e));
-      wvWebContents.executeJavaScript(OPENCLAW_JS).catch(e => console.error('Session JS injection failed:', e));
-      console.log(`[Sessions] CSS/JS injection enabled for session ${session.name}`);
+
+    wvWebContents.on("dom-ready", () => {
+      wvWebContents
+        .insertCSS(OPENCLAW_CSS)
+        .catch((e) => console.error("Session CSS injection failed:", e));
+      wvWebContents
+        .executeJavaScript(OPENCLAW_JS)
+        .catch((e) => console.error("Session JS injection failed:", e));
+      console.log(
+        `[Sessions] CSS/JS injection enabled for session ${session.name}`,
+      );
+    });
+
+    // Screen Vision: capture on Enter key
+    wvWebContents.on("before-input-event", (event, input) => {
+      if (input.key === "Enter" && input.type === "keyDown" && !input.shift) {
+        const parentWindow = BrowserWindow.fromWebContents(
+          wvWebContents.hostWebContents || event.sender,
+        );
+        const winId = parentWindow ? parentWindow.id : null;
+        if (winId && screenVisionState.get(winId)) {
+          try {
+            const { execSync } = require("child_process");
+            const path = `/tmp/fl-screen-${winId}.png`;
+            execSync(`/usr/sbin/screencapture -x ${path}`);
+            // Resize to max 1920px wide
+            execSync(
+              `/usr/bin/sips --resampleWidth 1920 ${path} --out ${path} 2>/dev/null || true`,
+            );
+            // Get active app
+            let activeApp = "Unknown";
+            try {
+              activeApp = execSync(
+                "/usr/bin/osascript -e 'tell application \"System Events\" to get name of first application process whose frontmost is true'",
+              )
+                .toString()
+                .trim();
+            } catch (e) {}
+            // Write metadata
+            const fs = require("fs");
+            fs.writeFileSync(
+              `/tmp/fl-screen-vision-${winId}.json`,
+              JSON.stringify({
+                enabled: true,
+                path: path,
+                activeApp: activeApp,
+                timestamp: new Date().toISOString(),
+              }),
+            );
+          } catch (e) {
+            console.error("[Screen Vision] Capture failed:", e.message);
+          }
+        }
+      }
     });
   });
-  
+
   // Save bounds on move/resize
   const saveBounds = () => {
     if (!sessionWindow.isDestroyed()) {
-      const allBounds = store.get('sessionWindowBounds');
+      const allBounds = store.get("sessionWindowBounds");
       allBounds[session.id] = sessionWindow.getBounds();
-      store.set('sessionWindowBounds', allBounds);
+      store.set("sessionWindowBounds", allBounds);
     }
   };
-  sessionWindow.on('move', saveBounds);
-  sessionWindow.on('resize', saveBounds);
-  
+  sessionWindow.on("move", saveBounds);
+  sessionWindow.on("resize", saveBounds);
+
   // Hide on blur (like main window)
-  sessionWindow.on('blur', () => {
+  sessionWindow.on("blur", () => {
     if (sessionWindow.isVisible()) {
       sessionWindow.hide();
     }
   });
-  
+
   // Handle keyboard shortcuts
-  sessionWindow.webContents.on('before-input-event', (event, input) => {
-    if (input.key === 'Escape') {
+  sessionWindow.webContents.on("before-input-event", (event, input) => {
+    if (input.key === "Escape") {
       sessionWindow.hide();
     }
     // Cycling shortcuts
-    if (input.type === 'keyDown' && input.shift && (input.meta || input.control)) {
-      if (input.key === 'ArrowRight') {
+    if (
+      input.type === "keyDown" &&
+      input.shift &&
+      (input.meta || input.control)
+    ) {
+      if (input.key === "ArrowRight") {
         event.preventDefault();
-        cycleWindows('next');
-      } else if (input.key === 'ArrowLeft') {
+        cycleWindows("next");
+      } else if (input.key === "ArrowLeft") {
         event.preventDefault();
-        cycleWindows('prev');
-      } else if (input.key === 'k' || input.key === 'K') {
+        cycleWindows("prev");
+      } else if (input.key === "k" || input.key === "K") {
         event.preventDefault();
         toggleTheme();
       }
     }
   });
-  
+
   // Clean up on close
-  sessionWindow.on('closed', () => {
+  sessionWindow.on("closed", () => {
     sessionWindows.delete(session.id);
-    const activeWindows = store.get('activeSessionWindows');
+    const activeWindows = store.get("activeSessionWindows");
     delete activeWindows[sessionWindow.id];
-    store.set('activeSessionWindows', activeWindows);
+    store.set("activeSessionWindows", activeWindows);
+
+    // Screen Vision cleanup
+    screenVisionState.delete(sessionWindow.id);
+    try {
+      require("fs").unlinkSync(`/tmp/fl-screen-${sessionWindow.id}.png`);
+    } catch (e) {}
+    try {
+      require("fs").unlinkSync(
+        `/tmp/fl-screen-vision-${sessionWindow.id}.json`,
+      );
+    } catch (e) {}
   });
-  
-  sessionWindow.once('ready-to-show', () => {
+
+  sessionWindow.once("ready-to-show", () => {
     sessionWindow.show();
     // Send session info to renderer
-    sessionWindow.webContents.send('load-session', {
+    sessionWindow.webContents.send("load-session", {
       gateway: gateway,
-      session: session
+      session: session,
     });
   });
-  
+
   return sessionWindow;
 }
 
 // IPC handlers for session management
-ipcMain.handle('get-sessions', async (e, gatewayId) => {
+ipcMain.handle("get-sessions", async (e, gatewayId) => {
   if (gatewayId) {
-    const sessions = store.get('sessions')[gatewayId] || [];
+    const sessions = store.get("sessions")[gatewayId] || [];
     return sessions;
   }
-  return store.get('sessions');
+  return store.get("sessions");
 });
 
-ipcMain.handle('refresh-sessions', async (e, gatewayId) => {
+ipcMain.handle("refresh-sessions", async (e, gatewayId) => {
   if (gatewayId) {
-    const gateway = store.get('gateways').find(g => g.id === gatewayId);
+    const gateway = store.get("gateways").find((g) => g.id === gatewayId);
     if (gateway) {
       const sessions = await fetchGatewaySessions(gateway.url);
-      const allSessions = store.get('sessions');
+      const allSessions = store.get("sessions");
       allSessions[gatewayId] = sessions;
-      store.set('sessions', allSessions);
+      store.set("sessions", allSessions);
       return sessions;
     }
     return [];
@@ -437,12 +550,12 @@ ipcMain.handle('refresh-sessions', async (e, gatewayId) => {
   }
 });
 
-ipcMain.handle('open-session', (e, gatewayId, sessionData) => {
+ipcMain.handle("open-session", (e, gatewayId, sessionData) => {
   const window = createSessionWindow(gatewayId, sessionData);
   return window !== null;
 });
 
-ipcMain.handle('close-session', (e, sessionId) => {
+ipcMain.handle("close-session", (e, sessionId) => {
   const window = sessionWindows.get(sessionId);
   if (window && !window.isDestroyed()) {
     window.close();
@@ -453,22 +566,22 @@ ipcMain.handle('close-session', (e, sessionId) => {
 
 // ── Visibility Management ─────────────────────────────────────
 
-ipcMain.handle('get-hidden-gateways', () => store.get('hiddenGateways'));
+ipcMain.handle("get-hidden-gateways", () => store.get("hiddenGateways"));
 
-ipcMain.handle('set-gateway-visibility', (e, gatewayId, visible) => {
-  const hiddenGateways = store.get('hiddenGateways');
+ipcMain.handle("set-gateway-visibility", (e, gatewayId, visible) => {
+  const hiddenGateways = store.get("hiddenGateways");
   if (visible) {
     // Remove from hidden list
-    const filtered = hiddenGateways.filter(id => id !== gatewayId);
-    store.set('hiddenGateways', filtered);
+    const filtered = hiddenGateways.filter((id) => id !== gatewayId);
+    store.set("hiddenGateways", filtered);
   } else {
     // Add to hidden list
     if (!hiddenGateways.includes(gatewayId)) {
       hiddenGateways.push(gatewayId);
-      store.set('hiddenGateways', hiddenGateways);
+      store.set("hiddenGateways", hiddenGateways);
     }
   }
-  return store.get('hiddenGateways');
+  return store.get("hiddenGateways");
 });
 
 // Session visibility API removed - was never implemented in UI
@@ -477,50 +590,52 @@ ipcMain.handle('set-gateway-visibility', (e, gatewayId, visible) => {
 function toggleTheme() {
   // Cycle: system -> dark -> light -> system
   // Or simply toggle: dark <-> light
-  if (nativeTheme.themeSource === 'system') {
-    nativeTheme.themeSource = nativeTheme.shouldUseDarkColors ? 'light' : 'dark';
-  } else if (nativeTheme.themeSource === 'dark') {
-    nativeTheme.themeSource = 'light';
+  if (nativeTheme.themeSource === "system") {
+    nativeTheme.themeSource = nativeTheme.shouldUseDarkColors
+      ? "light"
+      : "dark";
+  } else if (nativeTheme.themeSource === "dark") {
+    nativeTheme.themeSource = "light";
   } else {
-    nativeTheme.themeSource = 'dark';
+    nativeTheme.themeSource = "dark";
   }
-  
+
   // Also toggle theme in all webviews (OpenClaw chat UI)
   toggleWebviewTheme();
 }
 
 // Toggle theme in all OpenClaw webviews
 function toggleWebviewTheme() {
-  const theme = nativeTheme.shouldUseDarkColors ? 'dark' : 'light';
-  
+  const theme = nativeTheme.shouldUseDarkColors ? "dark" : "light";
+
   // Send theme toggle to main window webview
   if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('toggle-webview-theme', theme);
+    mainWindow.webContents.send("toggle-webview-theme", theme);
   }
-  
+
   // Send theme toggle to all session windows
   for (const sessionWindow of sessionWindows.values()) {
     if (!sessionWindow.isDestroyed()) {
-      sessionWindow.webContents.send('toggle-webview-theme', theme);
+      sessionWindow.webContents.send("toggle-webview-theme", theme);
     }
   }
 }
 
 // Notify all windows when theme changes
-nativeTheme.on('updated', () => {
-  const theme = nativeTheme.shouldUseDarkColors ? 'dark' : 'light';
+nativeTheme.on("updated", () => {
+  const theme = nativeTheme.shouldUseDarkColors ? "dark" : "light";
   if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('theme-changed', theme);
+    mainWindow.webContents.send("theme-changed", theme);
   }
   if (settingsWindow && !settingsWindow.isDestroyed()) {
-    settingsWindow.webContents.send('theme-changed', theme);
+    settingsWindow.webContents.send("theme-changed", theme);
   }
 });
 
 // ── Main Window ───────────────────────────────────────────────
 
 function createWindow() {
-  const bounds = store.get('windowBounds');
+  const bounds = store.get("windowBounds");
 
   mainWindow = new BrowserWindow({
     width: bounds.width || 400,
@@ -537,83 +652,150 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, "preload.js"),
       webviewTag: true,
-    }
+    },
   });
 
-  if (process.platform === 'darwin') {
-    mainWindow.setAlwaysOnTop(true, 'screen-saver');
+  if (process.platform === "darwin") {
+    mainWindow.setAlwaysOnTop(true, "screen-saver");
     mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   } else {
-    mainWindow.setAlwaysOnTop(true, 'screen-saver');
+    mainWindow.setAlwaysOnTop(true, "screen-saver");
   }
 
-  mainWindow.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
+  mainWindow.loadFile(path.join(__dirname, "..", "renderer", "index.html"));
 
   // Open DevTools with Cmd+Option+I
-  mainWindow.webContents.on('before-input-event', (event, input) => {
-    if (input.meta && input.alt && input.key === 'i') {
-      mainWindow.webContents.openDevTools({ mode: 'detach' });
+  mainWindow.webContents.on("before-input-event", (event, input) => {
+    if (input.meta && input.alt && input.key === "i") {
+      mainWindow.webContents.openDevTools({ mode: "detach" });
     }
   });
 
   // Inject CSS/JS into any webview that loads inside this window
-  mainWindow.webContents.on('did-attach-webview', (event, wvWebContents) => {
-    console.log('[Main] Webview attached, URL:', wvWebContents.getURL());
-    
-    wvWebContents.on('did-start-loading', () => console.log('[Main] Webview did-start-loading'));
-    wvWebContents.on('did-stop-loading', () => console.log('[Main] Webview did-stop-loading'));
-    wvWebContents.on('did-fail-load', (e, code, desc) => console.log('[Main] Webview did-fail-load:', code, desc));
-    
-    wvWebContents.on('dom-ready', () => {
+  mainWindow.webContents.on("did-attach-webview", (event, wvWebContents) => {
+    console.log("[Main] Webview attached, URL:", wvWebContents.getURL());
+
+    wvWebContents.on("did-start-loading", () =>
+      console.log("[Main] Webview did-start-loading"),
+    );
+    wvWebContents.on("did-stop-loading", () =>
+      console.log("[Main] Webview did-stop-loading"),
+    );
+    wvWebContents.on("did-fail-load", (e, code, desc) =>
+      console.log("[Main] Webview did-fail-load:", code, desc),
+    );
+
+    wvWebContents.on("dom-ready", () => {
       const url = wvWebContents.getURL();
-      console.log('[Main] Webview dom-ready, URL:', url);
-      
-      wvWebContents.insertCSS(OPENCLAW_CSS).catch(e => console.error('Main insertCSS failed:', e));
-      wvWebContents.executeJavaScript(OPENCLAW_JS).catch(e => console.error('Main executeJS failed:', e));
-      console.log('[Main] CSS/JS injection enabled');
+      console.log("[Main] Webview dom-ready, URL:", url);
+
+      wvWebContents
+        .insertCSS(OPENCLAW_CSS)
+        .catch((e) => console.error("Main insertCSS failed:", e));
+      wvWebContents
+        .executeJavaScript(OPENCLAW_JS)
+        .catch((e) => console.error("Main executeJS failed:", e));
+      console.log("[Main] CSS/JS injection enabled");
+    });
+
+    // Screen Vision: capture on Enter key
+    wvWebContents.on("before-input-event", (event, input) => {
+      if (input.key === "Enter" && input.type === "keyDown" && !input.shift) {
+        const parentWindow = BrowserWindow.fromWebContents(
+          wvWebContents.hostWebContents || event.sender,
+        );
+        const winId = parentWindow ? parentWindow.id : null;
+        if (winId && screenVisionState.get(winId)) {
+          try {
+            const { execSync } = require("child_process");
+            const path = `/tmp/fl-screen-${winId}.png`;
+            execSync(`/usr/sbin/screencapture -x ${path}`);
+            // Resize to max 1920px wide
+            execSync(
+              `/usr/bin/sips --resampleWidth 1920 ${path} --out ${path} 2>/dev/null || true`,
+            );
+            // Get active app
+            let activeApp = "Unknown";
+            try {
+              activeApp = execSync(
+                "/usr/bin/osascript -e 'tell application \"System Events\" to get name of first application process whose frontmost is true'",
+              )
+                .toString()
+                .trim();
+            } catch (e) {}
+            // Write metadata
+            const fs = require("fs");
+            fs.writeFileSync(
+              `/tmp/fl-screen-vision-${winId}.json`,
+              JSON.stringify({
+                enabled: true,
+                path: path,
+                activeApp: activeApp,
+                timestamp: new Date().toISOString(),
+              }),
+            );
+          } catch (e) {
+            console.error("[Screen Vision] Capture failed:", e.message);
+          }
+        }
+      }
     });
   });
 
   const saveBounds = () => {
     if (mainWindow && !mainWindow.isDestroyed()) {
-      store.set('windowBounds', mainWindow.getBounds());
+      store.set("windowBounds", mainWindow.getBounds());
     }
   };
-  mainWindow.on('move', saveBounds);
-  mainWindow.on('resize', saveBounds);
+  mainWindow.on("move", saveBounds);
+  mainWindow.on("resize", saveBounds);
 
-  mainWindow.on('blur', () => {
+  mainWindow.on("blur", () => {
     if (mainWindow && mainWindow.isVisible()) {
       mainWindow.hide();
     }
   });
 
-  mainWindow.once('ready-to-show', () => {
+  mainWindow.once("ready-to-show", () => {
     mainWindow.show();
   });
 
-  mainWindow.webContents.on('before-input-event', (event, input) => {
-    if (input.key === 'Escape') {
+  mainWindow.webContents.on("before-input-event", (event, input) => {
+    if (input.key === "Escape") {
       mainWindow.hide();
     }
     // Catch window cycling shortcuts even when webview has focus
-    if (input.type === 'keyDown' && input.shift && (input.meta || input.control)) {
-      if (input.key === 'ArrowRight') {
+    if (
+      input.type === "keyDown" &&
+      input.shift &&
+      (input.meta || input.control)
+    ) {
+      if (input.key === "ArrowRight") {
         event.preventDefault();
-        cycleWindows('next');
-      } else if (input.key === 'ArrowLeft') {
+        cycleWindows("next");
+      } else if (input.key === "ArrowLeft") {
         event.preventDefault();
-        cycleWindows('prev');
-      } else if (input.key === 'k' || input.key === 'K') {
+        cycleWindows("prev");
+      } else if (input.key === "k" || input.key === "K") {
         event.preventDefault();
         toggleTheme();
       }
     }
   });
 
-  mainWindow.on('closed', () => {
+  mainWindow.on("closed", () => {
+    // Screen Vision cleanup
+    if (mainWindow) {
+      screenVisionState.delete(mainWindow.id);
+      try {
+        require("fs").unlinkSync(`/tmp/fl-screen-${mainWindow.id}.png`);
+      } catch (e) {}
+      try {
+        require("fs").unlinkSync(`/tmp/fl-screen-vision-${mainWindow.id}.json`);
+      } catch (e) {}
+    }
     mainWindow = null;
   });
 }
@@ -630,7 +812,7 @@ function openSettings(opts = {}) {
     settingsWindow.focus();
     // If already open and requesting add form, send IPC to open it
     if (opts.openAddForm) {
-      settingsWindow.webContents.send('open-add-form');
+      settingsWindow.webContents.send("open-add-form");
     }
     return;
   }
@@ -643,18 +825,21 @@ function openSettings(opts = {}) {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload-settings.js'),
-    }
+      preload: path.join(__dirname, "preload-settings.js"),
+    },
   });
 
-  const queryString = opts.openAddForm ? '?openAddForm=1' : '';
-  settingsWindow.loadFile(path.join(__dirname, '..', 'renderer', 'settings.html'), { query: opts.openAddForm ? { openAddForm: '1' } : {} });
+  const queryString = opts.openAddForm ? "?openAddForm=1" : "";
+  settingsWindow.loadFile(
+    path.join(__dirname, "..", "renderer", "settings.html"),
+    { query: opts.openAddForm ? { openAddForm: "1" } : {} },
+  );
 
-  settingsWindow.on('closed', () => {
+  settingsWindow.on("closed", () => {
     settingsWindow = null;
     // Notify main window to refresh gateway list
     if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('gateways-updated');
+      mainWindow.webContents.send("gateways-updated");
     }
   });
 }
@@ -662,60 +847,60 @@ function openSettings(opts = {}) {
 // ── Enhanced Window Cycling (Gateway → Sessions → Next Gateway) ─
 
 function getAllWindowsInOrder() {
-  const gateways = store.get('gateways');
-  const allSessions = store.get('sessions');
-  const hiddenGateways = store.get('hiddenGateways');
+  const gateways = store.get("gateways");
+  const allSessions = store.get("sessions");
+  const hiddenGateways = store.get("hiddenGateways");
   const windows = [];
-  
+
   for (const gateway of gateways) {
     // Skip hidden gateways
     if (hiddenGateways.includes(gateway.id)) {
       continue;
     }
-    
+
     // Add main gateway window
     windows.push({
-      type: 'gateway',
+      type: "gateway",
       gatewayId: gateway.id,
       gateway: gateway,
-      window: mainWindow
+      window: mainWindow,
     });
-    
+
     // Add session windows for this gateway
     const sessions = allSessions[gateway.id] || [];
-    
+
     for (const session of sessions) {
       const sessionWindow = sessionWindows.get(session.id);
       if (sessionWindow && !sessionWindow.isDestroyed()) {
         windows.push({
-          type: 'session',
+          type: "session",
           gatewayId: gateway.id,
           sessionId: session.id,
           gateway: gateway,
           session: session,
-          window: sessionWindow
+          window: sessionWindow,
         });
       }
     }
   }
-  
+
   return windows;
 }
 
 function getCurrentlyFocusedWindow() {
   const focused = BrowserWindow.getFocusedWindow();
   if (!focused) return null;
-  
+
   if (focused === mainWindow) {
-    return { type: 'gateway', window: mainWindow };
+    return { type: "gateway", window: mainWindow };
   }
-  
+
   for (const [sessionId, sessionWindow] of sessionWindows.entries()) {
     if (sessionWindow === focused) {
-      return { type: 'session', sessionId, window: sessionWindow };
+      return { type: "session", sessionId, window: sessionWindow };
     }
   }
-  
+
   return null;
 }
 
@@ -728,9 +913,9 @@ function cycleWindows(direction) {
       mainWindow.show();
       mainWindow.focus();
     }
-    
+
     // Send cycling command to renderer which has the proper cycling logic
-    mainWindow.webContents.send('cycle-agent', direction);
+    mainWindow.webContents.send("cycle-agent", direction);
   }
 }
 
@@ -762,64 +947,74 @@ function toggleWindow() {
 
 function createTray() {
   const icon = nativeImage.createFromDataURL(
-    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAARElEQVQ4T2P8z8BQz0BAwMBAAGBhYGD4T4whBgYGRmIMkG4Ao2uQGECyC0h2wWgYjIYBVcKAZC+QnJBIdgHJXiDZAABhvBAR2MfUzgAAAABJRU5ErkJggg=='
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAARElEQVQ4T2P8z8BQz0BAwMBAAGBhYGD4T4whBgYGRmIMkG4Ao2uQGECyC0h2wWgYjIYBVcKAZC+QnJBIdgHJXiDZAABhvBAR2MfUzgAAAABJRU5ErkJggg==",
   );
 
   tray = new Tray(icon.resize({ width: 16, height: 16 }));
-  tray.setToolTip('Flying Lobster 🦞');
+  tray.setToolTip("Flying Lobster 🦞");
 
   const contextMenu = Menu.buildFromTemplate([
-    { label: 'Show/Hide', click: toggleWindow },
-    { type: 'separator' },
-    { label: 'Settings', click: openSettings },
-    { label: 'Check for Updates...', click: () => updater.checkForUpdate(true) },
-    { type: 'separator' },
-    { label: 'Quit', click: () => app.quit() }
+    { label: "Show/Hide", click: toggleWindow },
+    { type: "separator" },
+    { label: "Settings", click: openSettings },
+    {
+      label: "Check for Updates...",
+      click: () => updater.checkForUpdate(true),
+    },
+    { type: "separator" },
+    { label: "Quit", click: () => app.quit() },
   ]);
 
   tray.setContextMenu(contextMenu);
-  tray.on('click', toggleWindow);
+  tray.on("click", toggleWindow);
 }
 
 // Check if any Flying Lobster window is focused
 function isAnyWindowFocused() {
-  const { BrowserWindow } = require('electron');
-  return BrowserWindow.getAllWindows().some(win => win && !win.isDestroyed() && win.isFocused());
+  const { BrowserWindow } = require("electron");
+  return BrowserWindow.getAllWindows().some(
+    (win) => win && !win.isDestroyed() && win.isFocused(),
+  );
 }
 
 function registerHotkey() {
   globalShortcut.unregisterAll();
-  
-  const hotkey = store.get('hotkey');
-  const nextAgentHotkey = store.get('nextAgentHotkey');
-  const prevAgentHotkey = store.get('prevAgentHotkey');
-  const toggleThemeHotkey = store.get('toggleThemeHotkey');
-  
+
+  const hotkey = store.get("hotkey");
+  const nextAgentHotkey = store.get("nextAgentHotkey");
+  const prevAgentHotkey = store.get("prevAgentHotkey");
+  const toggleThemeHotkey = store.get("toggleThemeHotkey");
+
   // Main toggle hotkey (works globally)
   const registered = globalShortcut.register(hotkey, toggleWindow);
   if (!registered) {
     console.error(`Failed to register hotkey: ${hotkey}`);
   }
-  
+
   // Window cycling shortcuts - only when FL is focused
   const nextRegistered = globalShortcut.register(nextAgentHotkey, () => {
-    if (isAnyWindowFocused()) cycleWindows('next');
+    if (isAnyWindowFocused()) cycleWindows("next");
   });
   const prevRegistered = globalShortcut.register(prevAgentHotkey, () => {
-    if (isAnyWindowFocused()) cycleWindows('prev');
+    if (isAnyWindowFocused()) cycleWindows("prev");
   });
-  
-  if (!nextRegistered) console.error(`Failed to register next agent hotkey: ${nextAgentHotkey}`);
-  if (!prevRegistered) console.error(`Failed to register prev agent hotkey: ${prevAgentHotkey}`);
-  
+
+  if (!nextRegistered)
+    console.error(`Failed to register next agent hotkey: ${nextAgentHotkey}`);
+  if (!prevRegistered)
+    console.error(`Failed to register prev agent hotkey: ${prevAgentHotkey}`);
+
   // Theme toggle shortcut - only when FL is focused
   const themeRegistered = globalShortcut.register(toggleThemeHotkey, () => {
     if (isAnyWindowFocused()) toggleTheme();
   });
-  if (!themeRegistered) console.error(`Failed to register theme toggle hotkey: ${toggleThemeHotkey}`);
+  if (!themeRegistered)
+    console.error(
+      `Failed to register theme toggle hotkey: ${toggleThemeHotkey}`,
+    );
 }
 
-if (process.platform === 'darwin') {
+if (process.platform === "darwin") {
   app.dock.hide();
 }
 
@@ -827,34 +1022,36 @@ app.whenReady().then(() => {
   createWindow();
   createTray();
   registerHotkey();
-  
+
   // Initialize anonymous telemetry (first launch only)
   initTelemetry(); // Fire-and-forget, never blocks startup
-  
+
   // Initialize auto-updater
   updater.registerIpcHandlers();
   updater.setMainWindow(mainWindow);
-  
+
   // Check for updates on launch (after window is ready)
   setTimeout(() => {
     updater.checkForUpdate(true); // Force fresh check on startup
     updater.startPeriodicChecks(); // Check every 24 hours
   }, 3000);
-  
+
   // Refresh sessions for all gateways on startup
   setTimeout(() => {
-    refreshAllSessions().then(() => {
-      console.log('[Sessions] Initial session refresh completed');
-    }).catch(err => {
-      console.log('[Sessions] Initial session refresh failed:', err.message);
-    });
+    refreshAllSessions()
+      .then(() => {
+        console.log("[Sessions] Initial session refresh completed");
+      })
+      .catch((err) => {
+        console.log("[Sessions] Initial session refresh failed:", err.message);
+      });
   }, 2000); // Give gateways time to start
 });
 
-app.on('will-quit', () => {
+app.on("will-quit", () => {
   globalShortcut.unregisterAll();
 });
 
-app.on('window-all-closed', (e) => {
+app.on("window-all-closed", (e) => {
   e.preventDefault?.();
 });

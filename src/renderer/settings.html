@@ -1,666 +1,751 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'unsafe-inline'"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-    /* ── OpenClaw-Inspired CSS Variables ───────────────── */
-    :root {
-      /* Deep space theme with oceanic accents */
-      --bg-primary: #0a0e1a;
-      --bg-secondary: #0f1419;
-      --bg-tertiary: #161d2a;
-      --bg-input: #1a2332;
-      --bg-surface: #1f2937;
-      --bg-surface-hover: #252d3d;
-      
-      /* Typography with enhanced contrast */
-      --text-primary: #f8fafc;
-      --text-secondary: #94a3b8;
-      --text-muted: #64748b;
-      --text-dimmed: #475569;
-      --text-accent: #38bdf8;
-      
-      /* Ocean-inspired accents */
-      --accent: #0ea5e9;
-      --accent-hover: #0284c7;
-      --accent-secondary: #06b6d4;
-      --lobster-accent: #ff6b35;
-      
-      /* Subtle borders and glows */
-      --border-color: #1e293b;
-      --border-accent: #334155;
-      --glow-subtle: rgba(14, 165, 233, 0.15);
-      --glow-accent: rgba(14, 165, 233, 0.3);
-      
-      /* Status colors */
-      --success: #10b981;
-      --danger: #ef4444;
-      --danger-hover: #dc2626;
-      
-      /* Gradients */
-      --gradient-primary: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
-      --gradient-accent: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-      --gradient-glow: radial-gradient(circle at center, var(--glow-subtle) 0%, transparent 70%);
-    }
+      /* ── OpenClaw-Inspired CSS Variables ───────────────── */
+      :root {
+        /* Deep space theme with oceanic accents */
+        --bg-primary: #0a0e1a;
+        --bg-secondary: #0f1419;
+        --bg-tertiary: #161d2a;
+        --bg-input: #1a2332;
+        --bg-surface: #1f2937;
+        --bg-surface-hover: #252d3d;
 
-    :root.light {
-      --bg-primary: #f5f5f7;
-      --bg-secondary: #e8e8ed;
-      --bg-input: #ffffff;
-      --text-primary: #1d1d1f;
-      --text-secondary: #6e6e73;
-      --text-muted: #86868b;
-      --text-dimmed: #aeaeb2;
-      --border-color: #c7c7cc;
-      --accent: #0071e3;
-      --accent-hover: #0077ed;
-      --danger: #ff3b30;
-      --danger-hover: #d70015;
-      --success: #34c759;
-    }
+        /* Typography with enhanced contrast */
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --text-muted: #64748b;
+        --text-dimmed: #475569;
+        --text-accent: #38bdf8;
 
-    body {
-      font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
-      font-feature-settings: 'cv11', 'ss01';
-      font-variation-settings: 'wght' 400;
-      background: var(--bg-primary);
-      background-image: var(--gradient-glow);
-      color: var(--text-primary);
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      letter-spacing: -0.01em;
-      line-height: 1.5;
-    }
-    .titlebar {
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 16px;
-      background: var(--gradient-primary);
-      border-bottom: 1px solid var(--border-accent);
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-primary);
-      -webkit-app-region: drag;
-      flex-shrink: 0;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-    }
-    .titlebar::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: var(--gradient-accent);
-      opacity: 0.3;
-    }
-    .titlebar .close {
-      -webkit-app-region: no-drag;
-      cursor: pointer;
-      width: 14px; 
-      height: 14px;
-      border-radius: 50%;
-      background: var(--danger);
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      border: none;
-      position: relative;
-    }
-    .titlebar .close:hover { 
-      background: var(--danger-hover); 
-      transform: scale(1.1);
-      box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
-    }
-    .titlebar .back {
-      -webkit-app-region: no-drag;
-      cursor: pointer;
-      font-size: 18px;
-      opacity: 0.7;
-      transition: opacity 0.2s;
-      margin-right: 8px;
-    }
-    .titlebar .back:hover {
-      opacity: 1;
-    }
-    .titlebar .left {
-      display: flex;
-      align-items: center;
-    }
+        /* Ocean-inspired accents */
+        --accent: #0ea5e9;
+        --accent-hover: #0284c7;
+        --accent-secondary: #06b6d4;
+        --lobster-accent: #ff6b35;
 
-    .body { 
-      flex: 1; 
-      overflow-y: auto; 
-      padding: 20px; 
-      backdrop-filter: blur(10px);
-    }
-    .body::-webkit-scrollbar {
-      width: 8px;
-    }
-    .body::-webkit-scrollbar-track {
-      background: var(--bg-secondary);
-    }
-    .body::-webkit-scrollbar-thumb {
-      background: var(--border-accent);
-      border-radius: 4px;
-    }
-    .body::-webkit-scrollbar-thumb:hover {
-      background: var(--accent);
-    }
+        /* Subtle borders and glows */
+        --border-color: #1e293b;
+        --border-accent: #334155;
+        --glow-subtle: rgba(14, 165, 233, 0.15);
+        --glow-accent: rgba(14, 165, 233, 0.3);
 
-    h2 { 
-      font-size: 14px; 
-      color: var(--text-accent); 
-      text-transform: uppercase; 
-      letter-spacing: 0.1em; 
-      margin-bottom: 12px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    h2::before {
-      content: '';
-      width: 3px;
-      height: 16px;
-      background: var(--gradient-accent);
-      border-radius: 2px;
-    }
+        /* Status colors */
+        --success: #10b981;
+        --danger: #ef4444;
+        --danger-hover: #dc2626;
 
-    /* Enhanced Gateway list */
-    .gw-list { 
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      background: var(--bg-surface);
-      margin-bottom: 20px;
-      overflow: hidden;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-    .gw-item {
-      display: flex; 
-      align-items: center; 
-      gap: 12px;
-      padding: 16px;
-      border-bottom: 1px solid var(--border-color);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-    }
-    .gw-item::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 4px;
-      height: 100%;
-      background: transparent;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .gw-item:last-child { border-bottom: none; }
-    .gw-item:hover { 
-      /* hover removed */
-    }
-    .gw-item:hover::before {
-      /* hover removed */
-    }
-    .gw-item .info { flex: 1; }
-    .gw-item .name { 
-      font-weight: 700; 
-      font-size: 14px; 
-      color: var(--text-primary); 
-      margin-bottom: 4px;
-      letter-spacing: -0.02em;
-    }
-    .gw-item .url { 
-      font-size: 11px; 
-      color: var(--text-muted); 
-      word-break: break-all;
-      font-family: 'SF Mono', 'Monaco', monospace;
-      background: var(--bg-tertiary);
-      padding: 2px 6px;
-      border-radius: 4px;
-      display: inline-block;
-    }
-    .gw-item .actions {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .gw-item button {
-      background: none; 
-      border: none; 
-      cursor: pointer; 
-      font-size: 14px; 
-      padding: 8px; 
-      border-radius: 8px;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .gw-item .chat-btn { 
-      color: var(--success); 
-    }
-    .gw-item .chat-btn:hover { 
-      background: rgba(16, 185, 129, 0.15);
-      transform: scale(1.1);
-      box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
-    }
-    .gw-item .edit-btn { 
-      color: var(--accent); 
-    }
-    .gw-item .edit-btn:hover { 
-      background: var(--glow-subtle);
-      transform: scale(1.1);
-      box-shadow: 0 0 8px var(--glow-subtle);
-    }
-    .gw-item .del-btn { 
-      color: var(--danger); 
-    }
-    .gw-item .del-btn:hover { 
-      background: rgba(239, 68, 68, 0.15);
-      transform: scale(1.1);
-      box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
-    }
-    .gw-item .visibility-toggle {
-      position: relative;
-      width: 40px;
-      height: 20px;
-      background: var(--text-muted);
-      border-radius: 20px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    .gw-item .visibility-toggle.visible { background: var(--success); }
-    .gw-item .visibility-toggle::before {
-      content: '';
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 16px;
-      height: 16px;
-      background: white;
-      border-radius: 50%;
-      transition: transform 0.3s;
-    }
-    .gw-item .visibility-toggle.visible::before {
-      transform: translateX(20px);
-    }
+        /* Gradients */
+        --gradient-primary: linear-gradient(
+          135deg,
+          #0f172a 0%,
+          #1e293b 50%,
+          #334155 100%
+        );
+        --gradient-accent: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+        --gradient-glow: radial-gradient(
+          circle at center,
+          var(--glow-subtle) 0%,
+          transparent 70%
+        );
+      }
 
-    .empty { color: var(--text-dimmed); font-size: 12px; padding: 8px 0; }
+      :root.light {
+        --bg-primary: #f5f5f7;
+        --bg-secondary: #e8e8ed;
+        --bg-input: #ffffff;
+        --text-primary: #1d1d1f;
+        --text-secondary: #6e6e73;
+        --text-muted: #86868b;
+        --text-dimmed: #aeaeb2;
+        --border-color: #c7c7cc;
+        --accent: #0071e3;
+        --accent-hover: #0077ed;
+        --danger: #ff3b30;
+        --danger-hover: #d70015;
+        --success: #34c759;
+      }
 
-    /* Enhanced Form */
-    .form { 
-      display: flex; 
-      flex-direction: column; 
-      gap: 12px; 
-      margin-bottom: 24px; 
-      background: var(--bg-surface);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 16px;
-    }
-    .form-row { display: flex; gap: 12px; }
-    input {
-      flex: 1;
-      background: var(--bg-input);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 10px 12px;
-      color: var(--text-primary);
-      font-size: 13px;
-      font-weight: 500;
-      outline: none;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      -webkit-font-smoothing: antialiased;
-    }
-    input:focus { 
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--glow-subtle);
-      background: var(--bg-surface);
-    }
-    input:hover {
-      border-color: var(--border-accent);
-    }
-    input::placeholder { 
-      color: var(--text-dimmed);
-      font-weight: 400;
-    }
-    .btn {
-      background: var(--gradient-accent);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 10px 16px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
-      position: relative;
-      overflow: hidden;
-    }
-    .btn::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
-      transform: translateX(-100%);
-      transition: transform 0.6s;
-    }
-    .btn:hover { 
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
-    }
-    .btn:hover::before {
-      transform: translateX(100%);
-    }
-    .btn:active {
-      transform: translateY(0);
-    }
-    .btn-secondary { 
-      background: var(--bg-surface);
-      color: var(--text-primary);
-      border: 1px solid var(--border-accent);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    .btn-secondary:hover { 
-      background: var(--bg-surface-hover);
-      border-color: var(--accent);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
+      body {
+        font-family:
+          "SF Pro Display",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Inter",
+          "Segoe UI",
+          system-ui,
+          sans-serif;
+        font-feature-settings: "cv11", "ss01";
+        font-variation-settings: "wght" 400;
+        background: var(--bg-primary);
+        background-image: var(--gradient-glow);
+        color: var(--text-primary);
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        letter-spacing: -0.01em;
+        line-height: 1.5;
+      }
+      .titlebar {
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+        background: var(--gradient-primary);
+        border-bottom: 1px solid var(--border-accent);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+        -webkit-app-region: drag;
+        flex-shrink: 0;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+      }
+      .titlebar::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--gradient-accent);
+        opacity: 0.3;
+      }
+      .titlebar .close {
+        -webkit-app-region: no-drag;
+        cursor: pointer;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--danger);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        position: relative;
+      }
+      .titlebar .close:hover {
+        background: var(--danger-hover);
+        transform: scale(1.1);
+        box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+      }
+      .titlebar .back {
+        -webkit-app-region: no-drag;
+        cursor: pointer;
+        font-size: 18px;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+        margin-right: 8px;
+      }
+      .titlebar .back:hover {
+        opacity: 1;
+      }
+      .titlebar .left {
+        display: flex;
+        align-items: center;
+      }
 
-    /* Enhanced Keyboard Shortcuts section */
-    .shortcuts-section { margin-top: 12px; }
-    .shortcuts-list {
-      display: flex;
-      flex-direction: column;
-      background: var(--bg-surface);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-    .shortcut-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border-color);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-    }
-    .shortcut-item::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 4px;
-      height: 100%;
-      background: transparent;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .shortcut-item:last-child { border-bottom: none; }
-    .shortcut-item:hover {
-      /* hover removed */
-    }
-    .shortcut-item:hover::before {
-      /* hover removed */
-    }
-    .shortcut-item .label {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-primary);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      letter-spacing: -0.01em;
-      flex: 1;
-    }
-    .shortcut-item .keys {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      margin-left: auto;
-    }
-    .shortcut-item kbd {
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border-accent);
-      border-radius: 6px;
-      padding: 4px 8px;
-      font-family: 'SF Mono', 'Monaco', monospace;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-primary);
-      min-width: 24px;
-      text-align: center;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    }
-    .shortcut-item kbd:hover {
-      background: var(--bg-surface);
-      border-color: var(--accent);
-      transform: translateY(-1px);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-    .shortcut-item.editable {
-      background: rgba(93,173,226,0.05);
-    }
-    :root.light .shortcut-item.editable {
-      background: rgba(0,113,227,0.05);
-    }
-    .shortcut-item .hotkey-input-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .shortcut-item #hotkey-input {
-      width: 150px;
-      font-size: 11px;
-      padding: 4px 8px;
-      text-align: center;
-      font-family: -apple-system, BlinkMacSystemFont, monospace;
-    }
-    .shortcut-item .btn {
-      padding: 4px 8px;
-      font-size: 11px;
-    }
-    .shortcut-item .edit-icon {
-      cursor: pointer;
-      opacity: 0.5;
-      font-size: 14px;
-      padding: 4px 8px;
-      border-radius: 6px;
-      transition: all 0.2s;
-    }
-    .shortcut-item .edit-icon:hover {
-      opacity: 1;
-      background: var(--glow-subtle);
-    }
-    .shortcut-item .edit-mode {
-      display: none;
-      align-items: center;
-      gap: 8px;
-    }
-    .shortcut-item .shortcut-input {
-      width: 120px;
-      padding: 6px 10px;
-      font-size: 12px;
-      text-align: center;
-    }
-    .btn-small {
-      padding: 6px 12px !important;
-      font-size: 11px !important;
-    }
-    .shortcut-item.editing .keys,
-    .shortcut-item.editing .edit-icon {
-      display: none;
-    }
-    .shortcut-item.editing .edit-mode {
-      display: flex;
-    }
-    .editable-badge {
-      font-size: 9px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: white;
-      font-weight: 700;
-      background: var(--gradient-accent);
-      padding: 2px 6px;
-      border-radius: 6px;
-      box-shadow: 0 2px 4px rgba(14, 165, 233, 0.3);
-    }
+      .body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        backdrop-filter: blur(10px);
+      }
+      .body::-webkit-scrollbar {
+        width: 8px;
+      }
+      .body::-webkit-scrollbar-track {
+        background: var(--bg-secondary);
+      }
+      .body::-webkit-scrollbar-thumb {
+        background: var(--border-accent);
+        border-radius: 4px;
+      }
+      .body::-webkit-scrollbar-thumb:hover {
+        background: var(--accent);
+      }
 
-    .toast {
-      position: fixed; 
-      bottom: 24px; 
-      left: 50%; 
-      transform: translateX(-50%);
-      background: var(--success); 
-      color: white; 
-      padding: 12px 20px; 
-      border-radius: 12px;
-      font-size: 13px; 
-      font-weight: 600;
-      opacity: 0; 
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
-      pointer-events: none;
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-      backdrop-filter: blur(10px);
-    }
-    .toast.show { 
-      opacity: 1; 
-      transform: translateX(-50%) translateY(-4px);
-    }
-    .toast.error { 
-      background: var(--danger);
-      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-    }
+      h2 {
+        font-size: 14px;
+        color: var(--text-accent);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 12px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      h2::before {
+        content: "";
+        width: 3px;
+        height: 16px;
+        background: var(--gradient-accent);
+        border-radius: 2px;
+      }
 
-    /* Dead visibility section CSS removed - functionality consolidated to inline gateway toggles */
-  </style>
-</head>
-<body>
-  <div class="titlebar">
-    <div class="left">
-      <span class="back" id="back-btn" title="Back to chat">←</span>
-      <span>Settings</span>
-    </div>
-    <div class="close" id="close-btn"></div>
-  </div>
+      /* Enhanced Gateway list */
+      .gw-list {
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        background: var(--bg-surface);
+        margin-bottom: 20px;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      .gw-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px;
+        border-bottom: 1px solid var(--border-color);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+      }
+      .gw-item::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 4px;
+        height: 100%;
+        background: transparent;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .gw-item:last-child {
+        border-bottom: none;
+      }
+      .gw-item:hover {
+        /* hover removed */
+      }
+      .gw-item:hover::before {
+        /* hover removed */
+      }
+      .gw-item .info {
+        flex: 1;
+      }
+      .gw-item .name {
+        font-weight: 700;
+        font-size: 14px;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+        letter-spacing: -0.02em;
+      }
+      .gw-item .url {
+        font-size: 11px;
+        color: var(--text-muted);
+        word-break: break-all;
+        font-family: "SF Mono", "Monaco", monospace;
+        background: var(--bg-tertiary);
+        padding: 2px 6px;
+        border-radius: 4px;
+        display: inline-block;
+      }
+      .gw-item .actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .gw-item button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        padding: 8px;
+        border-radius: 8px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .gw-item .chat-btn {
+        color: var(--success);
+      }
+      .gw-item .chat-btn:hover {
+        background: rgba(16, 185, 129, 0.15);
+        transform: scale(1.1);
+        box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+      }
+      .gw-item .edit-btn {
+        color: var(--accent);
+      }
+      .gw-item .edit-btn:hover {
+        background: var(--glow-subtle);
+        transform: scale(1.1);
+        box-shadow: 0 0 8px var(--glow-subtle);
+      }
+      .gw-item .del-btn {
+        color: var(--danger);
+      }
+      .gw-item .del-btn:hover {
+        background: rgba(239, 68, 68, 0.15);
+        transform: scale(1.1);
+        box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+      }
+      .gw-item .visibility-toggle {
+        position: relative;
+        width: 40px;
+        height: 20px;
+        background: var(--text-muted);
+        border-radius: 20px;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+      .gw-item .visibility-toggle.visible {
+        background: var(--success);
+      }
+      .gw-item .visibility-toggle::before {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 16px;
+        height: 16px;
+        background: white;
+        border-radius: 50%;
+        transition: transform 0.3s;
+      }
+      .gw-item .visibility-toggle.visible::before {
+        transform: translateX(20px);
+      }
 
-  <div class="body">
-    <h2>Gateways</h2>
-    <p style="color: var(--text-secondary); font-size: 12px; margin-bottom: 12px;">
-      Hidden gateways are skipped during navigation cycling.
-    </p>
-    <div class="gw-list" id="gw-list"></div>
+      .empty {
+        color: var(--text-dimmed);
+        font-size: 12px;
+        padding: 8px 0;
+      }
 
-    <button class="btn btn-secondary" id="gw-add-btn" style="margin-bottom: 12px;">+ Add Gateway</button>
-    <div class="form" id="gw-form" style="display: none;">
-      <div class="form-row">
-        <input id="gw-name" placeholder="Name (e.g. Rooty)" />
-        <input id="gw-url" placeholder="URL (e.g. http://localhost:19002)" />
+      /* Enhanced Form */
+      .form {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 24px;
+        background: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 16px;
+      }
+      .form-row {
+        display: flex;
+        gap: 12px;
+      }
+      input {
+        flex: 1;
+        background: var(--bg-input);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 10px 12px;
+        color: var(--text-primary);
+        font-size: 13px;
+        font-weight: 500;
+        outline: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        -webkit-font-smoothing: antialiased;
+      }
+      input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px var(--glow-subtle);
+        background: var(--bg-surface);
+      }
+      input:hover {
+        border-color: var(--border-accent);
+      }
+      input::placeholder {
+        color: var(--text-dimmed);
+        font-weight: 400;
+      }
+      .btn {
+        background: var(--gradient-accent);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 16px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+        position: relative;
+        overflow: hidden;
+      }
+      .btn::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          135deg,
+          transparent 0%,
+          rgba(255, 255, 255, 0.1) 50%,
+          transparent 100%
+        );
+        transform: translateX(-100%);
+        transition: transform 0.6s;
+      }
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
+      }
+      .btn:hover::before {
+        transform: translateX(100%);
+      }
+      .btn:active {
+        transform: translateY(0);
+      }
+      .btn-secondary {
+        background: var(--bg-surface);
+        color: var(--text-primary);
+        border: 1px solid var(--border-accent);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .btn-secondary:hover {
+        background: var(--bg-surface-hover);
+        border-color: var(--accent);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      /* Enhanced Keyboard Shortcuts section */
+      .shortcuts-section {
+        margin-top: 12px;
+      }
+      .shortcuts-list {
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      .shortcut-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border-color);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+      }
+      .shortcut-item::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 4px;
+        height: 100%;
+        background: transparent;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .shortcut-item:last-child {
+        border-bottom: none;
+      }
+      .shortcut-item:hover {
+        /* hover removed */
+      }
+      .shortcut-item:hover::before {
+        /* hover removed */
+      }
+      .shortcut-item .label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        letter-spacing: -0.01em;
+        flex: 1;
+      }
+      .shortcut-item .keys {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-left: auto;
+      }
+      .shortcut-item kbd {
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-accent);
+        border-radius: 6px;
+        padding: 4px 8px;
+        font-family: "SF Mono", "Monaco", monospace;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-primary);
+        min-width: 24px;
+        text-align: center;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+      .shortcut-item kbd:hover {
+        background: var(--bg-surface);
+        border-color: var(--accent);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+      .shortcut-item.editable {
+        background: rgba(93, 173, 226, 0.05);
+      }
+      :root.light .shortcut-item.editable {
+        background: rgba(0, 113, 227, 0.05);
+      }
+      .shortcut-item .hotkey-input-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .shortcut-item #hotkey-input {
+        width: 150px;
+        font-size: 11px;
+        padding: 4px 8px;
+        text-align: center;
+        font-family: -apple-system, BlinkMacSystemFont, monospace;
+      }
+      .shortcut-item .btn {
+        padding: 4px 8px;
+        font-size: 11px;
+      }
+      .shortcut-item .edit-icon {
+        cursor: pointer;
+        opacity: 0.5;
+        font-size: 14px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        transition: all 0.2s;
+      }
+      .shortcut-item .edit-icon:hover {
+        opacity: 1;
+        background: var(--glow-subtle);
+      }
+      .shortcut-item .edit-mode {
+        display: none;
+        align-items: center;
+        gap: 8px;
+      }
+      .shortcut-item .shortcut-input {
+        width: 120px;
+        padding: 6px 10px;
+        font-size: 12px;
+        text-align: center;
+      }
+      .btn-small {
+        padding: 6px 12px !important;
+        font-size: 11px !important;
+      }
+      .shortcut-item.editing .keys,
+      .shortcut-item.editing .edit-icon {
+        display: none;
+      }
+      .shortcut-item.editing .edit-mode {
+        display: flex;
+      }
+      .editable-badge {
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: white;
+        font-weight: 700;
+        background: var(--gradient-accent);
+        padding: 2px 6px;
+        border-radius: 6px;
+        box-shadow: 0 2px 4px rgba(14, 165, 233, 0.3);
+      }
+
+      .toast {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--success);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 600;
+        opacity: 0;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: none;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        backdrop-filter: blur(10px);
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(-4px);
+      }
+      .toast.error {
+        background: var(--danger);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+      }
+
+      /* Dead visibility section CSS removed - functionality consolidated to inline gateway toggles */
+    </style>
+  </head>
+  <body>
+    <div class="titlebar">
+      <div class="left">
+        <span class="back" id="back-btn" title="Back to chat">←</span>
+        <span>Settings</span>
       </div>
-      <div class="form-row">
-        <input id="gw-token" placeholder="Token (just ask your agent)" style="font-family:monospace;font-size:12px;" />
-      </div>
-      <div class="form-row">
-        <button class="btn" id="gw-save">Add Gateway</button>
-        <button class="btn btn-secondary" id="gw-cancel">Cancel</button>
-      </div>
-    </div>
-
-    <h2>Keyboard Shortcuts</h2>
-    <div class="shortcuts-section">
-      <div class="shortcuts-list">
-        <div class="shortcut-item" data-shortcut="hotkey">
-          <span class="label">Show/Hide Window</span>
-          <span class="keys" id="hotkey-keys"></span>
-          <span class="edit-icon" title="Edit shortcut">✏️</span>
-          <div class="edit-mode">
-            <input class="shortcut-input" placeholder="Press keys..." />
-            <button class="btn btn-small">Save</button>
-            <button class="btn btn-secondary btn-small cancel-btn">✕</button>
-          </div>
-        </div>
-        <div class="shortcut-item" data-shortcut="nextAgent">
-          <span class="label">Next Agent</span>
-          <span class="keys" id="nextAgent-keys"></span>
-          <span class="edit-icon" title="Edit shortcut">✏️</span>
-          <div class="edit-mode">
-            <input class="shortcut-input" placeholder="Press keys..." />
-            <button class="btn btn-small">Save</button>
-            <button class="btn btn-secondary btn-small cancel-btn">✕</button>
-          </div>
-        </div>
-        <div class="shortcut-item" data-shortcut="prevAgent">
-          <span class="label">Previous Agent</span>
-          <span class="keys" id="prevAgent-keys"></span>
-          <span class="edit-icon" title="Edit shortcut">✏️</span>
-          <div class="edit-mode">
-            <input class="shortcut-input" placeholder="Press keys..." />
-            <button class="btn btn-small">Save</button>
-            <button class="btn btn-secondary btn-small cancel-btn">✕</button>
-          </div>
-        </div>
-        <div class="shortcut-item" data-shortcut="toggleTheme">
-          <span class="label">Light Mode / Dark Mode</span>
-          <span class="keys" id="toggleTheme-keys"></span>
-          <span class="edit-icon" title="Edit shortcut">✏️</span>
-          <div class="edit-mode">
-            <input class="shortcut-input" placeholder="Press keys..." />
-            <button class="btn btn-small">Save</button>
-            <button class="btn btn-secondary btn-small cancel-btn">✕</button>
-          </div>
-        </div>
-      </div>
+      <div class="close" id="close-btn"></div>
     </div>
 
-    <h2 style="margin-top: 16px;">About</h2>
-    <div class="shortcuts-section">
-      <div class="shortcuts-list">
-        <div class="shortcut-item">
-          <span class="label">
-            <span style="font-size: 16px; margin-right: 3px;">🦞</span>
-            Flying Lobster <span id="app-version" style="color: var(--text-muted); font-weight: normal;"></span>
-          </span>
-          <div class="hotkey-input-wrapper">
-            <button class="btn btn-secondary" id="check-update-btn">Check for Updates</button>
-          </div>
+    <div class="body">
+      <h2>Gateways</h2>
+      <p
+        style="
+          color: var(--text-secondary);
+          font-size: 12px;
+          margin-bottom: 12px;
+        "
+      >
+        Hidden gateways are skipped during navigation cycling.
+      </p>
+      <div class="gw-list" id="gw-list"></div>
+
+      <button
+        class="btn btn-secondary"
+        id="gw-add-btn"
+        style="margin-bottom: 12px"
+      >
+        + Add Gateway
+      </button>
+      <div class="form" id="gw-form" style="display: none">
+        <div class="form-row">
+          <input id="gw-name" placeholder="Name (e.g. Rooty)" />
+          <input id="gw-url" placeholder="URL (e.g. http://localhost:19002)" />
         </div>
-        <div class="shortcut-item" id="update-status-item" style="display: none;">
-          <span class="label" id="update-status-text">Checking...</span>
-          <div class="hotkey-input-wrapper" id="update-actions"></div>
+        <div class="form-row">
+          <input
+            id="gw-token"
+            placeholder="Token (just ask your agent)"
+            style="font-family: monospace; font-size: 12px"
+          />
+        </div>
+        <div class="form-row">
+          <button class="btn" id="gw-save">Add Gateway</button>
+          <button class="btn btn-secondary" id="gw-cancel">Cancel</button>
         </div>
       </div>
-    </div>
 
-    <h2 style="margin-top: 16px;">Feedback</h2>
-    <div class="shortcuts-section">
-      <div class="shortcuts-list">
-        <div class="shortcut-item">
-          <span class="label">Found a bug or have a suggestion?</span>
-          <div class="hotkey-input-wrapper">
-            <button class="btn" id="feedback-btn">Send Feedback</button>
+      <h2>Keyboard Shortcuts</h2>
+      <div class="shortcuts-section">
+        <div class="shortcuts-list">
+          <div class="shortcut-item" data-shortcut="hotkey">
+            <span class="label">Show/Hide Window</span>
+            <span class="keys" id="hotkey-keys"></span>
+            <span class="edit-icon" title="Edit shortcut">✏️</span>
+            <div class="edit-mode">
+              <input class="shortcut-input" placeholder="Press keys..." />
+              <button class="btn btn-small">Save</button>
+              <button class="btn btn-secondary btn-small cancel-btn">✕</button>
+            </div>
+          </div>
+          <div class="shortcut-item" data-shortcut="nextAgent">
+            <span class="label">Next Agent</span>
+            <span class="keys" id="nextAgent-keys"></span>
+            <span class="edit-icon" title="Edit shortcut">✏️</span>
+            <div class="edit-mode">
+              <input class="shortcut-input" placeholder="Press keys..." />
+              <button class="btn btn-small">Save</button>
+              <button class="btn btn-secondary btn-small cancel-btn">✕</button>
+            </div>
+          </div>
+          <div class="shortcut-item" data-shortcut="prevAgent">
+            <span class="label">Previous Agent</span>
+            <span class="keys" id="prevAgent-keys"></span>
+            <span class="edit-icon" title="Edit shortcut">✏️</span>
+            <div class="edit-mode">
+              <input class="shortcut-input" placeholder="Press keys..." />
+              <button class="btn btn-small">Save</button>
+              <button class="btn btn-secondary btn-small cancel-btn">✕</button>
+            </div>
+          </div>
+          <div class="shortcut-item" data-shortcut="toggleTheme">
+            <span class="label">Light Mode / Dark Mode</span>
+            <span class="keys" id="toggleTheme-keys"></span>
+            <span class="edit-icon" title="Edit shortcut">✏️</span>
+            <div class="edit-mode">
+              <input class="shortcut-input" placeholder="Press keys..." />
+              <button class="btn btn-small">Save</button>
+              <button class="btn btn-secondary btn-small cancel-btn">✕</button>
+            </div>
           </div>
         </div>
       </div>
+
+      <h2 style="margin-top: 16px">About</h2>
+      <div class="shortcuts-section">
+        <div class="shortcuts-list">
+          <div class="shortcut-item">
+            <span class="label">
+              <span style="font-size: 16px; margin-right: 3px">🦞</span>
+              Flying Lobster
+              <span
+                id="app-version"
+                style="color: var(--text-muted); font-weight: normal"
+              ></span>
+            </span>
+            <div class="hotkey-input-wrapper">
+              <button class="btn btn-secondary" id="check-update-btn">
+                Check for Updates
+              </button>
+            </div>
+          </div>
+          <div
+            class="shortcut-item"
+            id="update-status-item"
+            style="display: none"
+          >
+            <span class="label" id="update-status-text">Checking...</span>
+            <div class="hotkey-input-wrapper" id="update-actions"></div>
+          </div>
+        </div>
+      </div>
+
+      <h2 style="margin-top: 16px">Feedback</h2>
+      <div class="shortcuts-section">
+        <div class="shortcuts-list">
+          <div class="shortcut-item">
+            <span class="label">Found a bug or have a suggestion?</span>
+            <div class="hotkey-input-wrapper">
+              <button class="btn" id="feedback-btn">Send Feedback</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p
+        style="
+          margin-top: 24px;
+          text-align: center;
+          color: var(--text-muted);
+          font-size: 13px;
+        "
+      >
+        Built by
+        <a
+          href="https://x.com/cnijh"
+          target="_blank"
+          style="color: var(--text-muted); text-decoration: underline"
+          >@cnijh</a
+        >
+        and Rooty 🤖
+      </p>
     </div>
 
-    <p style="margin-top: 24px; text-align: center; color: var(--text-muted); font-size: 13px;">
-      Built by <a href="https://x.com/cnijh" target="_blank" style="color: var(--text-muted); text-decoration: underline;">@cnijh</a> and Rooty 🤖
-    </p>
-  </div>
+    <div class="toast" id="toast"></div>
 
-  <div class="toast" id="toast"></div>
-
-  <script src="settings.js"></script>
-</body>
+    <script src="settings.js"></script>
+  </body>
 </html>

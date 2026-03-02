@@ -1,83 +1,83 @@
-const Store = require('electron-store');
+const Store = require("electron-store");
 
 const schema = {
   gateways: {
-    type: 'array',
+    type: "array",
     default: [],
     items: {
-      type: 'object',
+      type: "object",
       properties: {
-        id: { type: 'string' },
-        name: { type: 'string' },
-        url: { type: 'string' },
-        token: { type: 'string' }
-      }
-    }
+        id: { type: "string" },
+        name: { type: "string" },
+        url: { type: "string" },
+        token: { type: "string" },
+      },
+    },
   },
   activeGateway: {
-    type: ['string', 'null'],
-    default: null
+    type: ["string", "null"],
+    default: null,
   },
   hotkey: {
-    type: 'string',
-    default: 'CommandOrControl+Shift+L'
+    type: "string",
+    default: "CommandOrControl+Shift+L",
   },
   nextAgentHotkey: {
-    type: 'string',
-    default: 'CommandOrControl+Shift+Right'
+    type: "string",
+    default: "CommandOrControl+Shift+Right",
   },
   prevAgentHotkey: {
-    type: 'string',
-    default: 'CommandOrControl+Shift+Left'
+    type: "string",
+    default: "CommandOrControl+Shift+Left",
   },
   toggleThemeHotkey: {
-    type: 'string',
-    default: 'CommandOrControl+Shift+K'
+    type: "string",
+    default: "CommandOrControl+Shift+K",
   },
   windowBounds: {
-    type: 'object',
+    type: "object",
     default: { x: undefined, y: undefined, width: 400, height: 600 },
     properties: {
-      x: { type: ['number', 'null'] },
-      y: { type: ['number', 'null'] },
-      width: { type: 'number' },
-      height: { type: 'number' }
-    }
+      x: { type: ["number", "null"] },
+      y: { type: ["number", "null"] },
+      width: { type: "number" },
+      height: { type: "number" },
+    },
   },
   // Session management
   sessions: {
-    type: 'object',
+    type: "object",
     default: {},
     // Structure: { gatewayId: [{ id, name, url }] }
   },
   activeSessionWindows: {
-    type: 'object',
+    type: "object",
     default: {},
     // Structure: { windowId: { gatewayId, sessionId } }
   },
   sessionWindowBounds: {
-    type: 'object',
+    type: "object",
     default: {},
     // Structure: { sessionId: { x, y, width, height } }
   },
   hiddenGateways: {
-    type: 'array',
+    type: "array",
     default: [],
     // Array of gateway IDs that are hidden from cycling
   },
   // Auto-update settings
   lastUpdateCheck: {
-    type: 'number',
-    default: 0
+    type: "number",
+    default: 0,
   },
   latestVersion: {
-    type: ['string', 'null'],
-    default: null
+    type: ["string", "null"],
+    default: null,
   },
   dismissedUpdateVersion: {
-    type: ['string', 'null'],
-    default: null
-  }
+    type: ["string", "null"],
+    default: null,
+  },
 };
 
 const store = new Store({ schema });

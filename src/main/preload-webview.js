@@ -36,9 +36,9 @@ const CSS = `
 `;
 
 function injectCSS(root) {
-  if (!root || root.querySelector('[data-fl]')) return;
-  const s = document.createElement('style');
-  s.setAttribute('data-fl', '1');
+  if (!root || root.querySelector("[data-fl]")) return;
+  const s = document.createElement("style");
+  s.setAttribute("data-fl", "1");
   s.textContent = CSS;
   root.appendChild(s);
 }
@@ -48,22 +48,30 @@ function inject() {
   injectCSS(document.head);
 
   // Set CSS vars on root
-  document.documentElement.style.setProperty('--shell-nav-width', '0px', 'important');
-  document.documentElement.style.setProperty('--shell-topbar-height', '0px', 'important');
+  document.documentElement.style.setProperty(
+    "--shell-nav-width",
+    "0px",
+    "important",
+  );
+  document.documentElement.style.setProperty(
+    "--shell-topbar-height",
+    "0px",
+    "important",
+  );
 
   // Find openclaw-app and inject into its shadow root
-  const app = document.querySelector('openclaw-app');
+  const app = document.querySelector("openclaw-app");
   if (app && app.shadowRoot) {
     injectCSS(app.shadowRoot);
-    
+
     // Add collapse class to shell
-    const shell = app.shadowRoot.querySelector('.shell');
+    const shell = app.shadowRoot.querySelector(".shell");
     if (shell) {
-      shell.classList.add('shell--nav-collapsed');
+      shell.classList.add("shell--nav-collapsed");
     }
 
     // Walk deeper shadow roots
-    app.shadowRoot.querySelectorAll('*').forEach(el => {
+    app.shadowRoot.querySelectorAll("*").forEach((el) => {
       if (el.shadowRoot) {
         injectCSS(el.shadowRoot);
       }
@@ -72,8 +80,8 @@ function inject() {
 }
 
 // Run when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', inject);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", inject);
 } else {
   inject();
 }
@@ -87,9 +95,12 @@ const iv = setInterval(() => {
 
 // Also watch for DOM changes
 const observer = new MutationObserver(inject);
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener("DOMContentLoaded", () => {
   observer.observe(document.body, { childList: true, subtree: true });
 });
 
 // Stop observer after 30s
-setTimeout(() => { observer.disconnect(); clearInterval(iv); }, 30000);
+setTimeout(() => {
+  observer.disconnect();
+  clearInterval(iv);
+}, 30000);

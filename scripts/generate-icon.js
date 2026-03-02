@@ -1,6 +1,6 @@
-const { app, BrowserWindow } = require('electron');
-const path = require('path');
-const fs = require('fs');
+const { app, BrowserWindow } = require("electron");
+const path = require("path");
+const fs = require("fs");
 
 const HTML = `
 <!DOCTYPE html>
@@ -35,21 +35,21 @@ app.whenReady().then(async () => {
     height: 1024,
     show: false,
     webPreferences: {
-      offscreen: true
-    }
+      offscreen: true,
+    },
   });
 
   await win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(HTML)}`);
-  
+
   // Wait for render
-  await new Promise(r => setTimeout(r, 500));
-  
+  await new Promise((r) => setTimeout(r, 500));
+
   const image = await win.webContents.capturePage();
   const pngBuffer = image.toPNG();
-  
-  const outPath = path.join(__dirname, '..', 'assets', 'icon.png');
+
+  const outPath = path.join(__dirname, "..", "assets", "icon.png");
   fs.writeFileSync(outPath, pngBuffer);
-  console.log('Saved icon.png to', outPath);
-  
+  console.log("Saved icon.png to", outPath);
+
   app.quit();
 });

@@ -1,693 +1,851 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src *;">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src *;"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-    /* ── OpenClaw-Inspired CSS Variables ───────────────── */
-    :root {
-      /* Deep space theme with oceanic accents */
-      --bg-primary: #0a0e1a;
-      --bg-secondary: #0f1419;
-      --bg-tertiary: #161d2a;
-      --bg-input: #1a2332;
-      --bg-surface: #1f2937;
-      --bg-surface-hover: #252d3d;
-      
-      /* Typography with enhanced contrast */
-      --text-primary: #f8fafc;
-      --text-secondary: #94a3b8;
-      --text-muted: #64748b;
-      --text-accent: #38bdf8;
-      
-      /* Ocean-inspired accents */
-      --accent-primary: #0ea5e9;
-      --accent-secondary: #06b6d4;
-      --accent-tertiary: #22d3ee;
-      --lobster-accent: #ff6b35;
-      
-      /* Subtle borders and glows */
-      --border-color: #1e293b;
-      --border-accent: #334155;
-      --glow-subtle: rgba(14, 165, 233, 0.15);
-      --glow-accent: rgba(14, 165, 233, 0.3);
-      
-      /* Status colors */
-      --success: #10b981;
-      --warning: #f59e0b;
-      --error: #ef4444;
-      --close-btn: #f87171;
-      --close-btn-hover: #ef4444;
-      
-      /* Gradients */
-      --gradient-primary: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
-      --gradient-accent: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-      --gradient-glow: radial-gradient(circle at center, var(--glow-subtle) 0%, transparent 70%);
-    }
+      /* ── OpenClaw-Inspired CSS Variables ───────────────── */
+      :root {
+        /* Deep space theme with oceanic accents */
+        --bg-primary: #0a0e1a;
+        --bg-secondary: #0f1419;
+        --bg-tertiary: #161d2a;
+        --bg-input: #1a2332;
+        --bg-surface: #1f2937;
+        --bg-surface-hover: #252d3d;
 
-    :root.light {
-      --bg-primary: #f5f5f7;
-      --bg-secondary: #e8e8ed;
-      --bg-tertiary: #dcdce2;
-      --bg-input: #ffffff;
-      --text-primary: #1d1d1f;
-      --text-secondary: #6e6e73;
-      --text-muted: #86868b;
-      --border-color: #c7c7cc;
-      --accent: #0071e3;
-      --close-btn: #ff5f57;
-      --close-btn-hover: #ff3b30;
-    }
+        /* Typography with enhanced contrast */
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --text-muted: #64748b;
+        --text-accent: #38bdf8;
 
-    body {
-      font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
-      font-feature-settings: 'cv11', 'ss01';
-      font-variation-settings: 'wght' 400;
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      user-select: none;
-      overflow: hidden;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      letter-spacing: -0.01em;
-      line-height: 1.5;
-    }
+        /* Ocean-inspired accents */
+        --accent-primary: #0ea5e9;
+        --accent-secondary: #06b6d4;
+        --accent-tertiary: #22d3ee;
+        --lobster-accent: #ff6b35;
 
-    /* ── Enhanced Titlebar with Lobster Branding ───────── */
-    .titlebar {
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 16px;
-      background: var(--gradient-primary);
-      border-bottom: 1px solid var(--border-accent);
-      font-size: 13px;
-      font-weight: 600;
-      color: #f8fafc; /* Fixed light color - doesn't change with theme */
-      -webkit-app-region: drag;
-      flex-shrink: 0;
-      transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-    }
-    .titlebar::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: var(--gradient-accent);
-      opacity: 0.3;
-    }
-    .titlebar .left { 
-      display: flex; 
-      align-items: center; 
-      gap: 10px;
-      font-weight: 500;
-      letter-spacing: -0.02em;
-    }
-    .titlebar .lobster-icon {
-      font-size: 16px;
-      filter: drop-shadow(0 0 8px var(--glow-accent));
-      animation: lobsterGlow 3s ease-in-out infinite;
-    }
-    @keyframes lobsterGlow {
-      0%, 100% { filter: drop-shadow(0 0 8px var(--glow-accent)); }
-      50% { filter: drop-shadow(0 0 12px var(--accent-tertiary)); }
-    }
-    .titlebar .close {
-      -webkit-app-region: no-drag;
-      cursor: pointer;
-      width: 14px; 
-      height: 14px;
-      border-radius: 50%;
-      background: var(--close-btn);
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      border: none;
-      position: relative;
-    }
-    .titlebar .close:hover { 
-      background: var(--close-btn-hover); 
-      transform: scale(1.1);
-      box-shadow: 0 0 8px rgba(248, 113, 113, 0.4);
-    }
-    .titlebar .right {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .titlebar .settings-icon {
-      -webkit-app-region: no-drag;
-      cursor: pointer;
-      font-size: 22px;
-      opacity: 0.7;
-      transition: opacity 0.2s;
-      color: #f8fafc; /* Fixed light color */
-    }
-    .titlebar .settings-icon:hover {
-      opacity: 1;
-    }
+        /* Subtle borders and glows */
+        --border-color: #1e293b;
+        --border-accent: #334155;
+        --glow-subtle: rgba(14, 165, 233, 0.15);
+        --glow-accent: rgba(14, 165, 233, 0.3);
 
-    /* ── Enhanced Gateway Bar ──────────────────────────── */
-    .gateway-bar {
-      display: none; /* Hidden for clean UI - access settings via tray menu */
-      /* display: flex; */
-      align-items: center;
-      gap: 12px;
-      padding: 8px 16px;
-      background: var(--bg-surface);
-      border-bottom: 1px solid var(--border-color);
-      font-size: 13px;
-      font-weight: 500;
-      flex-shrink: 0;
-      -webkit-app-region: no-drag;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-    }
-    .gateway-bar::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: var(--gradient-accent);
-      opacity: 0.2;
-    }
-    .status-dot {
-      width: 10px; 
-      height: 10px;
-      border-radius: 50%;
-      background: var(--text-muted);
-      flex-shrink: 0;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-    }
-    .status-dot::after {
-      content: '';
-      position: absolute;
-      inset: -2px;
-      border-radius: 50%;
-      background: inherit;
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-    .status-dot.online { 
-      background: var(--success);
-      box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
-    }
-    .status-dot.online::after { 
-      opacity: 0.3;
-      animation: statusPulse 2s ease-in-out infinite;
-    }
-    .status-dot.offline { 
-      background: var(--error);
-      box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
-    }
-    .status-dot.loading { 
-      background: var(--warning);
-      animation: loadingPulse 1.5s ease-in-out infinite;
-      box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
-    }
-    @keyframes statusPulse { 
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.2); }
-    }
-    @keyframes loadingPulse { 
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.6; transform: scale(0.9); }
-    }
+        /* Status colors */
+        --success: #10b981;
+        --warning: #f59e0b;
+        --error: #ef4444;
+        --close-btn: #f87171;
+        --close-btn-hover: #ef4444;
 
-    select {
-      flex: 1;
-      background: var(--bg-input);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 6px 12px;
-      color: var(--text-primary);
-      font-size: 13px;
-      font-weight: 500;
-      outline: none;
-      cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-      background-position: right 8px center;
-      background-repeat: no-repeat;
-      background-size: 16px;
-      padding-right: 32px;
-    }
-    select:focus { 
-      border-color: var(--accent-primary);
-      box-shadow: 0 0 0 3px var(--glow-subtle);
-      background-color: var(--bg-surface);
-    }
-    select:hover {
-      border-color: var(--border-accent);
-      background-color: var(--bg-surface-hover);
-    }
+        /* Gradients */
+        --gradient-primary: linear-gradient(
+          135deg,
+          #0f172a 0%,
+          #1e293b 50%,
+          #334155 100%
+        );
+        --gradient-accent: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+        --gradient-glow: radial-gradient(
+          circle at center,
+          var(--glow-subtle) 0%,
+          transparent 70%
+        );
+      }
 
-    /* Removed sessions panel for clean UI */
+      :root.light {
+        --bg-primary: #f5f5f7;
+        --bg-secondary: #e8e8ed;
+        --bg-tertiary: #dcdce2;
+        --bg-input: #ffffff;
+        --text-primary: #1d1d1f;
+        --text-secondary: #6e6e73;
+        --text-muted: #86868b;
+        --border-color: #c7c7cc;
+        --accent: #0071e3;
+        --close-btn: #ff5f57;
+        --close-btn-hover: #ff3b30;
+      }
 
-    /* ── Webview area ─────────────────────────────── */
-    #webview-container {
-      flex: 1;
-      position: relative;
-      -webkit-app-region: no-drag;
-    }
-    webview {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
+      body {
+        font-family:
+          "SF Pro Display",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Inter",
+          "Segoe UI",
+          system-ui,
+          sans-serif;
+        font-feature-settings: "cv11", "ss01";
+        font-variation-settings: "wght" 400;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        user-select: none;
+        overflow: hidden;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        letter-spacing: -0.01em;
+        line-height: 1.5;
+      }
 
-    /* ── Enhanced Overlays with Lobster Theming ─────── */
-    .overlay {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 20px;
-      background: var(--bg-primary);
-      z-index: 10;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      backdrop-filter: blur(20px);
-    }
-    .overlay.hidden { 
-      display: none; 
-      opacity: 0;
-      transform: scale(0.9);
-    }
-    .overlay .emoji { 
-      font-size: 64px;
-      filter: drop-shadow(0 0 16px var(--glow-accent));
-      animation: overlayFloat 3s ease-in-out infinite;
-    }
-    @keyframes overlayFloat {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-8px); }
-    }
-    .overlay .msg { 
-      font-size: 16px; 
-      font-weight: 600;
-      color: var(--text-primary); 
-      text-align: center; 
-      padding: 0 32px;
-      max-width: 400px;
-      line-height: 1.6;
-    }
-    .hint { 
-      font-size: 13px; 
-      color: var(--text-muted);
-      text-align: center;
-      max-width: 300px;
-    }
-    .overlay button {
-      background: var(--gradient-accent);
-      color: white;
-      border: none;
-      border-radius: 12px;
-      padding: 12px 24px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 600;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
-      position: relative;
-      overflow: hidden;
-    }
-    .overlay button::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
-      transform: translateX(-100%);
-      transition: transform 0.6s;
-    }
-    .overlay button:hover { 
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4);
-    }
-    .overlay button:hover::before {
-      transform: translateX(100%);
-    }
-    .overlay button:active {
-      transform: translateY(0);
-    }
+      /* ── Enhanced Titlebar with Lobster Branding ───────── */
+      .titlebar {
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+        background: var(--gradient-primary);
+        border-bottom: 1px solid var(--border-accent);
+        font-size: 13px;
+        font-weight: 600;
+        color: #f8fafc; /* Fixed light color - doesn't change with theme */
+        -webkit-app-region: drag;
+        flex-shrink: 0;
+        transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+      }
+      .titlebar::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--gradient-accent);
+        opacity: 0.3;
+      }
+      .titlebar .left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 500;
+        letter-spacing: -0.02em;
+      }
+      .titlebar .lobster-icon {
+        font-size: 16px;
+        filter: drop-shadow(0 0 8px var(--glow-accent));
+        animation: lobsterGlow 3s ease-in-out infinite;
+      }
+      @keyframes lobsterGlow {
+        0%,
+        100% {
+          filter: drop-shadow(0 0 8px var(--glow-accent));
+        }
+        50% {
+          filter: drop-shadow(0 0 12px var(--accent-tertiary));
+        }
+      }
+      .titlebar .close {
+        -webkit-app-region: no-drag;
+        cursor: pointer;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--close-btn);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        position: relative;
+      }
+      .titlebar .close:hover {
+        background: var(--close-btn-hover);
+        transform: scale(1.1);
+        box-shadow: 0 0 8px rgba(248, 113, 113, 0.4);
+      }
+      .titlebar .right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .titlebar .settings-icon {
+        -webkit-app-region: no-drag;
+        cursor: pointer;
+        font-size: 22px;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+        color: #f8fafc; /* Fixed light color */
+      }
+      .titlebar .settings-icon:hover {
+        opacity: 1;
+      }
+      .titlebar .screen-vision-toggle {
+        -webkit-app-region: no-drag;
+        cursor: pointer;
+        font-size: 16px;
+        opacity: 0.4;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        user-select: none;
+      }
+      .titlebar .screen-vision-toggle:hover {
+        opacity: 0.7;
+      }
+      .titlebar .screen-vision-toggle.active {
+        opacity: 1;
+        filter: drop-shadow(0 0 6px var(--glow-accent));
+        animation: eyeGlow 2s ease-in-out infinite;
+      }
+      .titlebar .screen-vision-toggle.active:hover {
+        filter: drop-shadow(0 0 10px var(--glow-accent));
+      }
+      @keyframes eyeGlow {
+        0%,
+        100% {
+          filter: drop-shadow(0 0 6px var(--glow-accent));
+        }
+        50% {
+          filter: drop-shadow(0 0 12px var(--glow-accent));
+        }
+      }
 
-    /* ── Agent switch indicator ───────────────────── */
-    .agent-indicator {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0,0,0,0.85);
-      color: #fff;
-      padding: 12px 24px;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: 600;
-      z-index: 9999;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.15s;
-    }
-    .agent-indicator.show { opacity: 1; }
-    :root.light .agent-indicator { background: rgba(255,255,255,0.95); color: #1d1d1f; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+      /* ── Enhanced Gateway Bar ──────────────────────────── */
+      .gateway-bar {
+        display: none; /* Hidden for clean UI - access settings via tray menu */
+        /* display: flex; */
+        align-items: center;
+        gap: 12px;
+        padding: 8px 16px;
+        background: var(--bg-surface);
+        border-bottom: 1px solid var(--border-color);
+        font-size: 13px;
+        font-weight: 500;
+        flex-shrink: 0;
+        -webkit-app-region: no-drag;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+      }
+      .gateway-bar::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--gradient-accent);
+        opacity: 0.2;
+      }
+      .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--text-muted);
+        flex-shrink: 0;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+      }
+      .status-dot::after {
+        content: "";
+        position: absolute;
+        inset: -2px;
+        border-radius: 50%;
+        background: inherit;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      .status-dot.online {
+        background: var(--success);
+        box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+      }
+      .status-dot.online::after {
+        opacity: 0.3;
+        animation: statusPulse 2s ease-in-out infinite;
+      }
+      .status-dot.offline {
+        background: var(--error);
+        box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+      }
+      .status-dot.loading {
+        background: var(--warning);
+        animation: loadingPulse 1.5s ease-in-out infinite;
+        box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+      }
+      @keyframes statusPulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.2);
+        }
+      }
+      @keyframes loadingPulse {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.6;
+          transform: scale(0.9);
+        }
+      }
 
-    /* ── Enhanced Update Banner ────────────────────────── */
-    .update-banner {
-      display: none;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 16px;
-      background: var(--gradient-accent);
-      border-top: 1px solid var(--accent-primary);
-      border-bottom: 1px solid var(--border-accent);
-      font-size: 13px;
-      font-weight: 500;
-      flex-shrink: 0;
-      animation: updateGlow 3s ease-in-out infinite;
-      position: relative;
-      overflow: hidden;
-    }
-    .update-banner::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-      animation: updateShimmer 2s linear infinite;
-    }
-    .update-banner.show { display: flex; }
-    .update-banner.updating { 
-      animation: updateProgress 1.5s ease-in-out infinite;
-      background: linear-gradient(135deg, var(--accent-secondary) 0%, var(--accent-primary) 100%);
-    }
-    @keyframes updateGlow { 
-      0%, 100% { box-shadow: 0 0 10px var(--glow-accent); }
-      50% { box-shadow: 0 0 20px var(--glow-accent); }
-    }
-    @keyframes updateShimmer {
-      0% { left: -100%; }
-      100% { left: 100%; }
-    }
-    @keyframes updateProgress { 
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.8; }
-    }
-    :root.light .update-banner { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); }
-    :root.light .update-banner { animation-name: updatePulseLight; }
-    @keyframes updatePulseLight { 
-      0%, 100% { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); }
-      50% { background: linear-gradient(135deg, #bbdefb 0%, #90caf9 100%); }
-    }
-    .update-banner .update-icon { 
-      font-size: 18px;
-      filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
-    }
-    .update-banner .update-text { 
-      flex: 1; 
-      color: white;
-      font-weight: 600;
-    }
-    .update-banner .update-text a { 
-      color: white;
-      text-decoration: underline;
-      text-decoration-color: rgba(255, 255, 255, 0.5);
-      cursor: pointer;
-      transition: text-decoration-color 0.2s;
-    }
-    .update-banner .update-text a:hover {
-      text-decoration-color: white;
-    }
-    .update-banner .update-btn {
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 8px;
-      padding: 6px 14px;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 600;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      backdrop-filter: blur(10px);
-    }
-    .update-banner .update-btn:hover { 
-      background: rgba(255, 255, 255, 0.3);
-      border-color: rgba(255, 255, 255, 0.5);
-      transform: translateY(-1px);
-    }
-    .update-banner .update-btn:disabled { 
-      opacity: 0.6; 
-      cursor: not-allowed;
-      transform: none;
-    }
-    .update-banner .dismiss-btn {
-      background: none;
-      border: none;
-      color: rgba(255, 255, 255, 0.8);
-      cursor: pointer;
-      font-size: 16px;
-      padding: 4px 6px;
-      border-radius: 4px;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .update-banner .dismiss-btn:hover { 
-      color: white;
-      background: rgba(255, 255, 255, 0.1);
-      transform: scale(1.1);
-    }
-    .update-progress {
-      font-size: 12px;
-      color: rgba(255, 255, 255, 0.9);
-      font-weight: 500;
-    }
+      select {
+        flex: 1;
+        background: var(--bg-input);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 6px 12px;
+        color: var(--text-primary);
+        font-size: 13px;
+        font-weight: 500;
+        outline: none;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 8px center;
+        background-repeat: no-repeat;
+        background-size: 16px;
+        padding-right: 32px;
+      }
+      select:focus {
+        border-color: var(--accent-primary);
+        box-shadow: 0 0 0 3px var(--glow-subtle);
+        background-color: var(--bg-surface);
+      }
+      select:hover {
+        border-color: var(--border-accent);
+        background-color: var(--bg-surface-hover);
+      }
 
-    /* ── Code Blocks with Copy Functionality ────────────── */
-    .code-block {
-      position: relative;
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      margin: 16px 0;
-      overflow: hidden;
-    }
-    .code-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 16px;
-      background: var(--bg-surface);
-      border-bottom: 1px solid var(--border-color);
-      font-size: 12px;
-      color: var(--text-secondary);
-    }
-    .code-language {
-      font-weight: 600;
-      color: var(--accent-primary);
-    }
-    .copy-btn {
-      background: none;
-      border: none;
-      color: var(--text-secondary);
-      cursor: pointer;
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 500;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .copy-btn:hover {
-      color: var(--accent-primary);
-      background: var(--bg-tertiary);
-    }
-    .copy-btn.copied {
-      color: var(--success);
-    }
-    .copy-btn.copied::after {
-      content: ' Copied!';
-    }
-    pre {
-      margin: 0;
-      padding: 16px;
-      background: transparent;
-      color: var(--text-primary);
-      font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
-      font-size: 13px;
-      line-height: 1.5;
-      overflow-x: auto;
-    }
-    pre::-webkit-scrollbar {
-      height: 6px;
-    }
-    pre::-webkit-scrollbar-track {
-      background: var(--bg-primary);
-    }
-    pre::-webkit-scrollbar-thumb {
-      background: var(--border-accent);
-      border-radius: 3px;
-    }
-    code {
-      font-family: inherit;
-      background: var(--bg-surface);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 0.9em;
-    }
-    pre code {
-      background: none;
-      padding: 0;
-    }
+      /* Removed sessions panel for clean UI */
 
-    /* ── Lobster Accent Elements ────────────────────────── */
-    .lobster-accent {
-      color: var(--lobster-accent);
-      filter: drop-shadow(0 0 4px var(--lobster-accent));
-    }
-    .lobster-glow {
-      animation: lobsterPulse 2s ease-in-out infinite;
-    }
-    @keyframes lobsterPulse {
-      0%, 100% { 
+      /* ── Webview area ─────────────────────────────── */
+      #webview-container {
+        flex: 1;
+        position: relative;
+        -webkit-app-region: no-drag;
+      }
+      webview {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
+      }
+
+      /* ── Enhanced Overlays with Lobster Theming ─────── */
+      .overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 20px;
+        background: var(--bg-primary);
+        z-index: 10;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(20px);
+      }
+      .overlay.hidden {
+        display: none;
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      .overlay .emoji {
+        font-size: 64px;
+        filter: drop-shadow(0 0 16px var(--glow-accent));
+        animation: overlayFloat 3s ease-in-out infinite;
+      }
+      @keyframes overlayFloat {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-8px);
+        }
+      }
+      .overlay .msg {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-primary);
+        text-align: center;
+        padding: 0 32px;
+        max-width: 400px;
+        line-height: 1.6;
+      }
+      .hint {
+        font-size: 13px;
+        color: var(--text-muted);
+        text-align: center;
+        max-width: 300px;
+      }
+      .overlay button {
+        background: var(--gradient-accent);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 12px 24px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+        position: relative;
+        overflow: hidden;
+      }
+      .overlay button::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          135deg,
+          transparent 0%,
+          rgba(255, 255, 255, 0.1) 50%,
+          transparent 100%
+        );
+        transform: translateX(-100%);
+        transition: transform 0.6s;
+      }
+      .overlay button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4);
+      }
+      .overlay button:hover::before {
+        transform: translateX(100%);
+      }
+      .overlay button:active {
+        transform: translateY(0);
+      }
+
+      /* ── Agent switch indicator ───────────────────── */
+      .agent-indicator {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.85);
+        color: #fff;
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        z-index: 9999;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.15s;
+      }
+      .agent-indicator.show {
+        opacity: 1;
+      }
+      :root.light .agent-indicator {
+        background: rgba(255, 255, 255, 0.95);
+        color: #1d1d1f;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      }
+
+      /* ── Enhanced Update Banner ────────────────────────── */
+      .update-banner {
+        display: none;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 16px;
+        background: var(--gradient-accent);
+        border-top: 1px solid var(--accent-primary);
+        border-bottom: 1px solid var(--border-accent);
+        font-size: 13px;
+        font-weight: 500;
+        flex-shrink: 0;
+        animation: updateGlow 3s ease-in-out infinite;
+        position: relative;
+        overflow: hidden;
+      }
+      .update-banner::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.1),
+          transparent
+        );
+        animation: updateShimmer 2s linear infinite;
+      }
+      .update-banner.show {
+        display: flex;
+      }
+      .update-banner.updating {
+        animation: updateProgress 1.5s ease-in-out infinite;
+        background: linear-gradient(
+          135deg,
+          var(--accent-secondary) 0%,
+          var(--accent-primary) 100%
+        );
+      }
+      @keyframes updateGlow {
+        0%,
+        100% {
+          box-shadow: 0 0 10px var(--glow-accent);
+        }
+        50% {
+          box-shadow: 0 0 20px var(--glow-accent);
+        }
+      }
+      @keyframes updateShimmer {
+        0% {
+          left: -100%;
+        }
+        100% {
+          left: 100%;
+        }
+      }
+      @keyframes updateProgress {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.8;
+        }
+      }
+      :root.light .update-banner {
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+      }
+      :root.light .update-banner {
+        animation-name: updatePulseLight;
+      }
+      @keyframes updatePulseLight {
+        0%,
+        100% {
+          background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        }
+        50% {
+          background: linear-gradient(135deg, #bbdefb 0%, #90caf9 100%);
+        }
+      }
+      .update-banner .update-icon {
+        font-size: 18px;
+        filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
+      }
+      .update-banner .update-text {
+        flex: 1;
+        color: white;
+        font-weight: 600;
+      }
+      .update-banner .update-text a {
+        color: white;
+        text-decoration: underline;
+        text-decoration-color: rgba(255, 255, 255, 0.5);
+        cursor: pointer;
+        transition: text-decoration-color 0.2s;
+      }
+      .update-banner .update-text a:hover {
+        text-decoration-color: white;
+      }
+      .update-banner .update-btn {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 8px;
+        padding: 6px 14px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(10px);
+      }
+      .update-banner .update-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.5);
+        transform: translateY(-1px);
+      }
+      .update-banner .update-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+      .update-banner .dismiss-btn {
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, 0.8);
+        cursor: pointer;
+        font-size: 16px;
+        padding: 4px 6px;
+        border-radius: 4px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .update-banner .dismiss-btn:hover {
+        color: white;
+        background: rgba(255, 255, 255, 0.1);
+        transform: scale(1.1);
+      }
+      .update-progress {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 500;
+      }
+
+      /* ── Code Blocks with Copy Functionality ────────────── */
+      .code-block {
+        position: relative;
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        margin: 16px 0;
+        overflow: hidden;
+      }
+      .code-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 16px;
+        background: var(--bg-surface);
+        border-bottom: 1px solid var(--border-color);
+        font-size: 12px;
+        color: var(--text-secondary);
+      }
+      .code-language {
+        font-weight: 600;
+        color: var(--accent-primary);
+      }
+      .copy-btn {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .copy-btn:hover {
+        color: var(--accent-primary);
+        background: var(--bg-tertiary);
+      }
+      .copy-btn.copied {
+        color: var(--success);
+      }
+      .copy-btn.copied::after {
+        content: " Copied!";
+      }
+      pre {
+        margin: 0;
+        padding: 16px;
+        background: transparent;
+        color: var(--text-primary);
+        font-family:
+          "SF Mono", "Monaco", "Cascadia Code", "Roboto Mono", monospace;
+        font-size: 13px;
+        line-height: 1.5;
+        overflow-x: auto;
+      }
+      pre::-webkit-scrollbar {
+        height: 6px;
+      }
+      pre::-webkit-scrollbar-track {
+        background: var(--bg-primary);
+      }
+      pre::-webkit-scrollbar-thumb {
+        background: var(--border-accent);
+        border-radius: 3px;
+      }
+      code {
+        font-family: inherit;
+        background: var(--bg-surface);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.9em;
+      }
+      pre code {
+        background: none;
+        padding: 0;
+      }
+
+      /* ── Lobster Accent Elements ────────────────────────── */
+      .lobster-accent {
+        color: var(--lobster-accent);
         filter: drop-shadow(0 0 4px var(--lobster-accent));
-        transform: scale(1);
       }
-      50% { 
-        filter: drop-shadow(0 0 8px var(--lobster-accent));
-        transform: scale(1.05);
+      .lobster-glow {
+        animation: lobsterPulse 2s ease-in-out infinite;
       }
-    }
-
-    /* ── Subtle Animation Improvements ──────────────────── */
-    * {
-      scroll-behavior: smooth;
-    }
-    
-    .animated-bg {
-      background: var(--gradient-primary);
-      background-size: 200% 200%;
-      animation: gradientShift 8s ease infinite;
-    }
-    @keyframes gradientShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-
-    /* ── Enhanced Settings Button ────────────────────────── */
-    .settings-btn {
-      background: none;
-      border: none;
-      color: var(--text-secondary);
-      cursor: pointer;
-      font-size: 18px;
-      padding: 8px;
-      border-radius: 8px;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      -webkit-app-region: no-drag;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .settings-btn:hover {
-      color: var(--accent-primary);
-      background: var(--bg-surface);
-      transform: scale(1.1) rotate(90deg);
-      box-shadow: 0 0 12px var(--glow-subtle);
-    }
-    .settings-btn:active {
-      transform: scale(0.95) rotate(180deg);
-    }
-  </style>
-</head>
-<body>
-  <div class="titlebar">
-    <div class="left">
-      <span class="lobster-icon">🦞</span>
-      <span id="agent-name">Loading...</span>
-    </div>
-    <div class="right">
-      <div class="settings-icon" onclick="window.api.openSettings()" title="Settings">⚙</div>
-      <div class="close" onclick="window.close()"></div>
-    </div>
-  </div>
-
-  <div class="gateway-bar">
-    <div class="status-dot" id="status-dot"></div>
-    <select id="gw-select">
-      <option value="">No gateway</option>
-    </select>
-    <button id="settings-btn" title="Settings" class="settings-btn">⚙️</button>
-  </div>
-
-  <!-- Removed sessions panel for clean UI -->
-
-  <!-- Update banner (shown when new version available) -->
-  <div class="update-banner" id="update-banner">
-    <span class="update-icon">🆕</span>
-    <span class="update-text" id="update-text">Update available</span>
-    <button class="update-btn" id="update-btn">Update</button>
-    <button class="dismiss-btn" id="dismiss-btn" title="Later">✕</button>
-  </div>
-
-  <div id="webview-container">
-    <div class="overlay" id="overlay-empty">
-      <div class="emoji">🦞</div>
-      <div class="msg">No gateway configured</div>
-      <button id="add-gw-btn">+ Add Gateway</button>
-    </div>
-    <div class="overlay hidden" id="overlay-loading">
-      <div class="emoji">⏳</div>
-      <div class="msg">Connecting...</div>
-    </div>
-    <div class="overlay hidden" id="overlay-error">
-      <div class="emoji">💥</div>
-      <div class="msg" id="error-msg">Failed to connect</div>
-      <button id="retry-btn">Retry</button>
-    </div>
-  </div>
-
-  <!-- Agent switch indicator (shows briefly when switching) -->
-  <div class="agent-indicator" id="agent-indicator"></div>
-
-  <script>
-    // ── Theme support ─────────────────────────────────
-    function applyTheme(theme) {
-      if (theme === 'light') {
-        document.documentElement.classList.add('light');
-      } else {
-        document.documentElement.classList.remove('light');
+      @keyframes lobsterPulse {
+        0%,
+        100% {
+          filter: drop-shadow(0 0 4px var(--lobster-accent));
+          transform: scale(1);
+        }
+        50% {
+          filter: drop-shadow(0 0 8px var(--lobster-accent));
+          transform: scale(1.05);
+        }
       }
-    }
 
-    // Apply initial theme
-    window.api.getTheme().then(applyTheme);
+      /* ── Subtle Animation Improvements ──────────────────── */
+      * {
+        scroll-behavior: smooth;
+      }
 
-    // Listen for system theme changes
-    window.api.onThemeChanged(applyTheme);
+      .animated-bg {
+        background: var(--gradient-primary);
+        background-size: 200% 200%;
+        animation: gradientShift 8s ease infinite;
+      }
+      @keyframes gradientShift {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
 
-    // Listen for webview theme toggle requests
-    window.api.onToggleWebviewTheme((theme) => {
-      console.log('[FL] Setting webview theme to:', theme);
-      if (currentWebview) {
-        // Execute JavaScript in the webview to FORCE set OpenClaw's theme
-        const themeToggleJS = `
+      /* ── Enhanced Settings Button ────────────────────────── */
+      .settings-btn {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-size: 18px;
+        padding: 8px;
+        border-radius: 8px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        -webkit-app-region: no-drag;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .settings-btn:hover {
+        color: var(--accent-primary);
+        background: var(--bg-surface);
+        transform: scale(1.1) rotate(90deg);
+        box-shadow: 0 0 12px var(--glow-subtle);
+      }
+      .settings-btn:active {
+        transform: scale(0.95) rotate(180deg);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="titlebar">
+      <div class="left">
+        <span class="lobster-icon">🦞</span>
+        <span id="agent-name">Loading...</span>
+      </div>
+      <div class="right">
+        <div
+          class="screen-vision-toggle"
+          id="screenVisionToggle"
+          onclick="toggleScreenVision()"
+          title="Toggle Screen Vision"
+        >
+          👁
+        </div>
+        <div
+          class="settings-icon"
+          onclick="window.api.openSettings()"
+          title="Settings"
+        >
+          ⚙
+        </div>
+        <div class="close" onclick="window.close()"></div>
+      </div>
+    </div>
+
+    <div class="gateway-bar">
+      <div class="status-dot" id="status-dot"></div>
+      <select id="gw-select">
+        <option value="">No gateway</option>
+      </select>
+      <button id="settings-btn" title="Settings" class="settings-btn">
+        ⚙️
+      </button>
+    </div>
+
+    <!-- Removed sessions panel for clean UI -->
+
+    <!-- Update banner (shown when new version available) -->
+    <div class="update-banner" id="update-banner">
+      <span class="update-icon">🆕</span>
+      <span class="update-text" id="update-text">Update available</span>
+      <button class="update-btn" id="update-btn">Update</button>
+      <button class="dismiss-btn" id="dismiss-btn" title="Later">✕</button>
+    </div>
+
+    <div id="webview-container">
+      <div class="overlay" id="overlay-empty">
+        <div class="emoji">🦞</div>
+        <div class="msg">No gateway configured</div>
+        <button id="add-gw-btn">+ Add Gateway</button>
+      </div>
+      <div class="overlay hidden" id="overlay-loading">
+        <div class="emoji">⏳</div>
+        <div class="msg">Connecting...</div>
+      </div>
+      <div class="overlay hidden" id="overlay-error">
+        <div class="emoji">💥</div>
+        <div class="msg" id="error-msg">Failed to connect</div>
+        <button id="retry-btn">Retry</button>
+      </div>
+    </div>
+
+    <!-- Agent switch indicator (shows briefly when switching) -->
+    <div class="agent-indicator" id="agent-indicator"></div>
+
+    <script>
+      // ── Screen Vision ─────────────────────────────────
+      let screenVisionEnabled = false;
+      async function toggleScreenVision() {
+        const result = await window.api.toggleScreenVision();
+        screenVisionEnabled = result;
+        const toggle = document.getElementById("screenVisionToggle");
+        if (screenVisionEnabled) {
+          toggle.classList.add("active");
+        } else {
+          toggle.classList.remove("active");
+        }
+        console.log(
+          `[FL] Screen vision: ${screenVisionEnabled ? "ON" : "OFF"}`,
+        );
+      }
+
+      // ── Theme support ─────────────────────────────────
+      function applyTheme(theme) {
+        if (theme === "light") {
+          document.documentElement.classList.add("light");
+        } else {
+          document.documentElement.classList.remove("light");
+        }
+      }
+
+      // Apply initial theme
+      window.api.getTheme().then(applyTheme);
+
+      // Listen for system theme changes
+      window.api.onThemeChanged(applyTheme);
+
+      // Listen for webview theme toggle requests
+      window.api.onToggleWebviewTheme((theme) => {
+        console.log("[FL] Setting webview theme to:", theme);
+        if (currentWebview) {
+          // Execute JavaScript in the webview to FORCE set OpenClaw's theme
+          const themeToggleJS = `
           (function() {
             const targetTheme = '${theme}';
             console.log('[FL Webview] FORCE setting theme to:', targetTheme);
@@ -757,15 +915,17 @@
             console.log('[FL Webview] Theme sync completed');
           })();
         `;
-        
-        currentWebview.executeJavaScript(themeToggleJS).catch(e => 
-          console.error('[FL] Failed to toggle webview theme:', e)
-        );
-      }
-    });
 
-    // ── CSS to inject via insertCSS (applies to document level) ──
-    const INJECT_CSS = `
+          currentWebview
+            .executeJavaScript(themeToggleJS)
+            .catch((e) =>
+              console.error("[FL] Failed to toggle webview theme:", e),
+            );
+        }
+      });
+
+      // ── CSS to inject via insertCSS (applies to document level) ──
+      const INJECT_CSS = `
       /* Use OpenClaw's own CSS variables to collapse nav and topbar */
       :root, :host {
         --shell-nav-width: 0px !important;
@@ -773,8 +933,8 @@
       }
     `;
 
-    // ── JS to execute inside the webview for deeper control ──
-    const INJECT_JS = `
+      // ── JS to execute inside the webview for deeper control ──
+      const INJECT_JS = `
       (function flyingLobsterInject() {
         function doInject() {
           // Strategy 1: Set CSS custom properties on document root
@@ -864,302 +1024,330 @@
       })();
     `;
 
-    // ── DOM refs ──
-    const select = document.getElementById('gw-select');
-    const dot = document.getElementById('status-dot');
-    const container = document.getElementById('webview-container');
-    const agentNameEl = document.getElementById('agent-name');
-    const overlayEmpty = document.getElementById('overlay-empty');
-    const overlayLoading = document.getElementById('overlay-loading');
-    const overlayError = document.getElementById('overlay-error');
-    const errorMsg = document.getElementById('error-msg');
-    const agentIndicator = document.getElementById('agent-indicator');
+      // ── DOM refs ──
+      const select = document.getElementById("gw-select");
+      const dot = document.getElementById("status-dot");
+      const container = document.getElementById("webview-container");
+      const agentNameEl = document.getElementById("agent-name");
+      const overlayEmpty = document.getElementById("overlay-empty");
+      const overlayLoading = document.getElementById("overlay-loading");
+      const overlayError = document.getElementById("overlay-error");
+      const errorMsg = document.getElementById("error-msg");
+      const agentIndicator = document.getElementById("agent-indicator");
 
-    let currentWebview = null;
-    let currentGatewayUrl = null;
-    let gatewaysList = []; // Cache for keyboard navigation
+      let currentWebview = null;
+      let currentGatewayUrl = null;
+      let gatewaysList = []; // Cache for keyboard navigation
 
-    function showOverlay(name) {
-      overlayEmpty.classList.toggle('hidden', name !== 'empty');
-      overlayLoading.classList.toggle('hidden', name !== 'loading');
-      overlayError.classList.toggle('hidden', name !== 'error');
-    }
-
-    function destroyWebview() {
-      if (currentWebview) {
-        currentWebview.remove();
-        currentWebview = null;
-        currentGatewayUrl = null;
+      function showOverlay(name) {
+        overlayEmpty.classList.toggle("hidden", name !== "empty");
+        overlayLoading.classList.toggle("hidden", name !== "loading");
+        overlayError.classList.toggle("hidden", name !== "error");
       }
-    }
 
-    function loadGatewayUrl(url, token) {
-      console.log('[FL Debug] loadGatewayUrl called:', url, 'token:', token ? 'yes' : 'no');
-      console.log('[FL Debug] currentGatewayUrl:', currentGatewayUrl, 'currentWebview:', !!currentWebview);
-      
-      if (!url) {
+      function destroyWebview() {
+        if (currentWebview) {
+          currentWebview.remove();
+          currentWebview = null;
+          currentGatewayUrl = null;
+        }
+      }
+
+      function loadGatewayUrl(url, token) {
+        console.log(
+          "[FL Debug] loadGatewayUrl called:",
+          url,
+          "token:",
+          token ? "yes" : "no",
+        );
+        console.log(
+          "[FL Debug] currentGatewayUrl:",
+          currentGatewayUrl,
+          "currentWebview:",
+          !!currentWebview,
+        );
+
+        if (!url) {
+          destroyWebview();
+          showOverlay("empty");
+          dot.className = "status-dot";
+          return;
+        }
+
+        // Don't reload if same URL
+        if (currentGatewayUrl === url && currentWebview) {
+          console.log("[FL Debug] Skipping reload - same URL");
+          return;
+        }
+
         destroyWebview();
-        showOverlay('empty');
-        dot.className = 'status-dot';
-        return;
-      }
+        console.log("[FL Debug] Showing loading overlay");
+        showOverlay("loading");
+        dot.className = "status-dot loading";
 
-      // Don't reload if same URL
-      if (currentGatewayUrl === url && currentWebview) {
-        console.log('[FL Debug] Skipping reload - same URL');
-        return;
-      }
+        // Append auth token as query parameter if present
+        let loadUrl = url;
+        if (token) {
+          const sep = url.includes("?") ? "&" : "?";
+          loadUrl = url + sep + "token=" + encodeURIComponent(token);
+        }
 
-      destroyWebview();
-      console.log('[FL Debug] Showing loading overlay');
-      showOverlay('loading');
-      dot.className = 'status-dot loading';
+        const wv = document.createElement("webview");
+        console.log("[FL Debug] Loading URL:", loadUrl);
+        wv.src = loadUrl;
+        wv.style.cssText =
+          "position:absolute;inset:0;width:100%;height:100%;border:none;";
+        wv.setAttribute("allowpopups", "");
+        wv.setAttribute("partition", "persist:gateway");
 
-      // Append auth token as query parameter if present
-      let loadUrl = url;
-      if (token) {
-        const sep = url.includes('?') ? '&' : '?';
-        loadUrl = url + sep + 'token=' + encodeURIComponent(token);
-      }
+        wv.addEventListener("did-start-loading", () =>
+          console.log("[FL Debug] did-start-loading"),
+        );
+        wv.addEventListener("did-stop-loading", () =>
+          console.log("[FL Debug] did-stop-loading"),
+        );
+        wv.addEventListener("did-finish-load", () =>
+          console.log("[FL Debug] did-finish-load"),
+        );
+        wv.addEventListener("console-message", (e) =>
+          console.log("[FL Webview]", e.message),
+        );
 
-      const wv = document.createElement('webview');
-      console.log('[FL Debug] Loading URL:', loadUrl);
-      wv.src = loadUrl;
-      wv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;';
-      wv.setAttribute('allowpopups', '');
-      wv.setAttribute('partition', 'persist:gateway');
-      
-      wv.addEventListener('did-start-loading', () => console.log('[FL Debug] did-start-loading'));
-      wv.addEventListener('did-stop-loading', () => console.log('[FL Debug] did-stop-loading'));
-      wv.addEventListener('did-finish-load', () => console.log('[FL Debug] did-finish-load'));
-      wv.addEventListener('console-message', (e) => console.log('[FL Webview]', e.message));
-      
-      wv.addEventListener('dom-ready', () => {
-        console.log('[FL Debug] dom-ready');
-        showOverlay(null); // hide all
-        dot.className = 'status-dot online';
-        // Inject CSS at document level — CSS custom properties inherit into shadow DOM
-        wv.insertCSS(INJECT_CSS).then(() => console.log('CSS injected')).catch(e => console.error('insertCSS failed:', e));
-        // Execute JS to inject styles directly into shadow DOM
-        wv.executeJavaScript(INJECT_JS).then(() => console.log('JS injected')).catch(e => console.error('executeJS failed:', e));
-      });
-
-      wv.addEventListener('did-fail-load', (e) => {
-        if (e.errorCode === -3) return; // ERR_ABORTED, ignore
-        errorMsg.textContent = e.errorDescription || 'Failed to connect to gateway';
-        showOverlay('error');
-        dot.className = 'status-dot offline';
-      });
-
-      container.insertBefore(wv, container.firstChild);
-      currentWebview = wv;
-      currentGatewayUrl = url;
-    }
-
-    async function loadGateways() {
-      const gateways = await window.api.getGateways();
-      const activeId = await window.api.getActiveGateway();
-      
-      // Cache gateways for keyboard navigation
-      gatewaysList = gateways;
-
-      select.textContent = '';
-      if (gateways.length) {
-        gateways.forEach(g => {
-          const opt = document.createElement('option');
-          opt.value = g.id;
-          opt.textContent = g.name;
-          if (g.id === activeId) opt.selected = true;
-          select.appendChild(opt);
+        wv.addEventListener("dom-ready", () => {
+          console.log("[FL Debug] dom-ready");
+          showOverlay(null); // hide all
+          dot.className = "status-dot online";
+          // Inject CSS at document level — CSS custom properties inherit into shadow DOM
+          wv.insertCSS(INJECT_CSS)
+            .then(() => console.log("CSS injected"))
+            .catch((e) => console.error("insertCSS failed:", e));
+          // Execute JS to inject styles directly into shadow DOM
+          wv.executeJavaScript(INJECT_JS)
+            .then(() => console.log("JS injected"))
+            .catch((e) => console.error("executeJS failed:", e));
         });
-      } else {
-        const opt = document.createElement('option');
-        opt.value = '';
-        opt.textContent = 'No gateways configured';
-        select.appendChild(opt);
+
+        wv.addEventListener("did-fail-load", (e) => {
+          if (e.errorCode === -3) return; // ERR_ABORTED, ignore
+          errorMsg.textContent =
+            e.errorDescription || "Failed to connect to gateway";
+          showOverlay("error");
+          dot.className = "status-dot offline";
+        });
+
+        container.insertBefore(wv, container.firstChild);
+        currentWebview = wv;
+        currentGatewayUrl = url;
       }
 
-      const activeGw = gateways.find(g => g.id === activeId) || gateways[0] || null;
-      if (activeGw) {
-        agentNameEl.textContent = activeGw.name;
-        loadGatewayUrl(activeGw.url, activeGw.token);
-      } else {
-        agentNameEl.textContent = 'No agent';
-        destroyWebview();
-        showOverlay('empty');
-        dot.className = 'status-dot';
-      }
-    }
-
-    // ── Agent Switching (Cmd+Shift+Left/Right) ────────
-    function showAgentIndicator(name) {
-      agentIndicator.textContent = name;
-      agentIndicator.classList.add('show');
-      setTimeout(() => agentIndicator.classList.remove('show'), 800);
-    }
-
-    async function cycleAgent(direction) {
-      if (gatewaysList.length < 2) return; // Need at least 2 to cycle
-      
-      const activeId = await window.api.getActiveGateway();
-      const currentIndex = gatewaysList.findIndex(g => g.id === activeId);
-      
-      let newIndex;
-      if (direction === 'next') {
-        newIndex = (currentIndex + 1) % gatewaysList.length;
-      } else {
-        newIndex = (currentIndex - 1 + gatewaysList.length) % gatewaysList.length;
-      }
-      
-      const newGateway = gatewaysList[newIndex];
-      await window.api.setActiveGateway(newGateway.id);
-      
-      // Update select dropdown
-      select.value = newGateway.id;
-      
-      // Update agent name in titlebar
-      agentNameEl.textContent = newGateway.name;
-      
-      // Show indicator
-      showAgentIndicator(newGateway.name);
-      
-      // Load the new gateway
-      loadGatewayUrl(newGateway.url, newGateway.token);
-    }
-
-    // Listen for keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
-      // Cmd+Shift+Right = next agent
-      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'ArrowRight') {
-        e.preventDefault();
-        cycleAgent('next');
-      }
-      // Cmd+Shift+Left = previous agent
-      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'ArrowLeft') {
-        e.preventDefault();
-        cycleAgent('prev');
-      }
-    });
-
-    select.addEventListener('change', async () => {
-      if (!select.value) return;
-      await window.api.setActiveGateway(select.value);
-      const gateways = await window.api.getGateways();
-      const gw = gateways.find(g => g.id === select.value);
-      if (gw) {
-        agentNameEl.textContent = gw.name;
-        loadGatewayUrl(gw.url, gw.token);
-      }
-    });
-
-    document.getElementById('retry-btn').addEventListener('click', async () => {
-      if (currentGatewayUrl) {
-        const url = currentGatewayUrl;
-        currentGatewayUrl = null; // force reload
-        // Re-fetch token from active gateway
+      async function loadGateways() {
         const gateways = await window.api.getGateways();
         const activeId = await window.api.getActiveGateway();
-        const gw = gateways.find(g => g.id === activeId);
-        loadGatewayUrl(url, gw ? gw.token : '');
+
+        // Cache gateways for keyboard navigation
+        gatewaysList = gateways;
+
+        select.textContent = "";
+        if (gateways.length) {
+          gateways.forEach((g) => {
+            const opt = document.createElement("option");
+            opt.value = g.id;
+            opt.textContent = g.name;
+            if (g.id === activeId) opt.selected = true;
+            select.appendChild(opt);
+          });
+        } else {
+          const opt = document.createElement("option");
+          opt.value = "";
+          opt.textContent = "No gateways configured";
+          select.appendChild(opt);
+        }
+
+        const activeGw =
+          gateways.find((g) => g.id === activeId) || gateways[0] || null;
+        if (activeGw) {
+          agentNameEl.textContent = activeGw.name;
+          loadGatewayUrl(activeGw.url, activeGw.token);
+        } else {
+          agentNameEl.textContent = "No agent";
+          destroyWebview();
+          showOverlay("empty");
+          dot.className = "status-dot";
+        }
       }
-    });
 
-    // Refresh when settings window closes
-    if (window.api && window.api.onGatewaysUpdated) {
-      window.api.onGatewaysUpdated(loadGateways);
-    }
+      // ── Agent Switching (Cmd+Shift+Left/Right) ────────
+      function showAgentIndicator(name) {
+        agentIndicator.textContent = name;
+        agentIndicator.classList.add("show");
+        setTimeout(() => agentIndicator.classList.remove("show"), 800);
+      }
 
-    // Listen for agent switch from main process (Cmd+Shift+Arrow shortcuts)
-    if (window.api && window.api.onSwitchGateway) {
-      window.api.onSwitchGateway(async (gatewayId) => {
-        const gw = gatewaysList.find(g => g.id === gatewayId);
+      async function cycleAgent(direction) {
+        if (gatewaysList.length < 2) return; // Need at least 2 to cycle
+
+        const activeId = await window.api.getActiveGateway();
+        const currentIndex = gatewaysList.findIndex((g) => g.id === activeId);
+
+        let newIndex;
+        if (direction === "next") {
+          newIndex = (currentIndex + 1) % gatewaysList.length;
+        } else {
+          newIndex =
+            (currentIndex - 1 + gatewaysList.length) % gatewaysList.length;
+        }
+
+        const newGateway = gatewaysList[newIndex];
+        await window.api.setActiveGateway(newGateway.id);
+
+        // Update select dropdown
+        select.value = newGateway.id;
+
+        // Update agent name in titlebar
+        agentNameEl.textContent = newGateway.name;
+
+        // Show indicator
+        showAgentIndicator(newGateway.name);
+
+        // Load the new gateway
+        loadGatewayUrl(newGateway.url, newGateway.token);
+      }
+
+      // Listen for keyboard shortcuts
+      document.addEventListener("keydown", (e) => {
+        // Cmd+Shift+Right = next agent
+        if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "ArrowRight") {
+          e.preventDefault();
+          cycleAgent("next");
+        }
+        // Cmd+Shift+Left = previous agent
+        if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "ArrowLeft") {
+          e.preventDefault();
+          cycleAgent("prev");
+        }
+      });
+
+      select.addEventListener("change", async () => {
+        if (!select.value) return;
+        await window.api.setActiveGateway(select.value);
+        const gateways = await window.api.getGateways();
+        const gw = gateways.find((g) => g.id === select.value);
         if (gw) {
-          select.value = gw.id;
-          showAgentIndicator(gw.name);
+          agentNameEl.textContent = gw.name;
           loadGatewayUrl(gw.url, gw.token);
         }
       });
-    }
 
-    // Listen for agent cycling from main process keyboard shortcuts
-    if (window.api && window.api.onCycleAgent) {
-      window.api.onCycleAgent(cycleAgent);
-    }
+      document
+        .getElementById("retry-btn")
+        .addEventListener("click", async () => {
+          if (currentGatewayUrl) {
+            const url = currentGatewayUrl;
+            currentGatewayUrl = null; // force reload
+            // Re-fetch token from active gateway
+            const gateways = await window.api.getGateways();
+            const activeId = await window.api.getActiveGateway();
+            const gw = gateways.find((g) => g.id === activeId);
+            loadGatewayUrl(url, gw ? gw.token : "");
+          }
+        });
 
-    // Add Gateway button (empty state)
-    document.getElementById('add-gw-btn').addEventListener('click', () => {
-      window.api.openSettings({ openAddForm: true });
-    });
-
-    // Settings gear button
-    document.getElementById('settings-btn').addEventListener('click', () => {
-      window.api.openSettings();
-    });
-
-    // ── Update Banner Logic ───────────────────────────
-    const updateBanner = document.getElementById('update-banner');
-    const updateText = document.getElementById('update-text');
-    const updateBtn = document.getElementById('update-btn');
-    const dismissBtn = document.getElementById('dismiss-btn');
-
-    function renderUpdateState(state) {
-      if (!state) return;
-      
-      console.log('[FL Update]', state);
-      
-      if (state.updating) {
-        // Show progress state
-        updateBanner.classList.add('show', 'updating');
-        updateText.innerHTML = state.progress || 'Updating...';
-        updateBtn.disabled = true;
-        updateBtn.textContent = '⏳';
-        dismissBtn.style.display = 'none';
-      } else if (state.available && state.latestVersion) {
-        // Show update available
-        updateBanner.classList.add('show');
-        updateBanner.classList.remove('updating');
-        updateText.innerHTML = `v${state.latestVersion} available`;
-        updateBtn.disabled = false;
-        updateBtn.textContent = 'Update';
-        dismissBtn.style.display = '';
-      } else if (state.error && !state.available) {
-        // Hide on error (silent fail)
-        updateBanner.classList.remove('show');
-      } else {
-        // No update available
-        updateBanner.classList.remove('show');
+      // Refresh when settings window closes
+      if (window.api && window.api.onGatewaysUpdated) {
+        window.api.onGatewaysUpdated(loadGateways);
       }
-    }
 
-    // Listen for update state changes
-    if (window.api && window.api.onUpdateStateChanged) {
-      window.api.onUpdateStateChanged(renderUpdateState);
-    }
-
-    // Get initial update state
-    if (window.api && window.api.getUpdateState) {
-      window.api.getUpdateState().then(renderUpdateState);
-    }
-
-    // Handle update button click
-    updateBtn.addEventListener('click', async () => {
-      if (window.api && window.api.startUpdate) {
-        await window.api.startUpdate();
+      // Listen for agent switch from main process (Cmd+Shift+Arrow shortcuts)
+      if (window.api && window.api.onSwitchGateway) {
+        window.api.onSwitchGateway(async (gatewayId) => {
+          const gw = gatewaysList.find((g) => g.id === gatewayId);
+          if (gw) {
+            select.value = gw.id;
+            showAgentIndicator(gw.name);
+            loadGatewayUrl(gw.url, gw.token);
+          }
+        });
       }
-    });
 
-    // Handle dismiss button click
-    dismissBtn.addEventListener('click', async () => {
-      if (window.api && window.api.dismissUpdate) {
-        await window.api.dismissUpdate();
-        updateBanner.classList.remove('show');
+      // Listen for agent cycling from main process keyboard shortcuts
+      if (window.api && window.api.onCycleAgent) {
+        window.api.onCycleAgent(cycleAgent);
       }
-    });
 
-    // Sessions management removed for clean UI
+      // Add Gateway button (empty state)
+      document.getElementById("add-gw-btn").addEventListener("click", () => {
+        window.api.openSettings({ openAddForm: true });
+      });
 
-    // Init
-    loadGateways();
-  </script>
-</body>
+      // Settings gear button
+      document.getElementById("settings-btn").addEventListener("click", () => {
+        window.api.openSettings();
+      });
+
+      // ── Update Banner Logic ───────────────────────────
+      const updateBanner = document.getElementById("update-banner");
+      const updateText = document.getElementById("update-text");
+      const updateBtn = document.getElementById("update-btn");
+      const dismissBtn = document.getElementById("dismiss-btn");
+
+      function renderUpdateState(state) {
+        if (!state) return;
+
+        console.log("[FL Update]", state);
+
+        if (state.updating) {
+          // Show progress state
+          updateBanner.classList.add("show", "updating");
+          updateText.innerHTML = state.progress || "Updating...";
+          updateBtn.disabled = true;
+          updateBtn.textContent = "⏳";
+          dismissBtn.style.display = "none";
+        } else if (state.available && state.latestVersion) {
+          // Show update available
+          updateBanner.classList.add("show");
+          updateBanner.classList.remove("updating");
+          updateText.innerHTML = `v${state.latestVersion} available`;
+          updateBtn.disabled = false;
+          updateBtn.textContent = "Update";
+          dismissBtn.style.display = "";
+        } else if (state.error && !state.available) {
+          // Hide on error (silent fail)
+          updateBanner.classList.remove("show");
+        } else {
+          // No update available
+          updateBanner.classList.remove("show");
+        }
+      }
+
+      // Listen for update state changes
+      if (window.api && window.api.onUpdateStateChanged) {
+        window.api.onUpdateStateChanged(renderUpdateState);
+      }
+
+      // Get initial update state
+      if (window.api && window.api.getUpdateState) {
+        window.api.getUpdateState().then(renderUpdateState);
+      }
+
+      // Handle update button click
+      updateBtn.addEventListener("click", async () => {
+        if (window.api && window.api.startUpdate) {
+          await window.api.startUpdate();
+        }
+      });
+
+      // Handle dismiss button click
+      dismissBtn.addEventListener("click", async () => {
+        if (window.api && window.api.dismissUpdate) {
+          await window.api.dismissUpdate();
+          updateBanner.classList.remove("show");
+        }
+      });
+
+      // Sessions management removed for clean UI
+
+      // Init
+      loadGateways();
+    </script>
+  </body>
 </html>
